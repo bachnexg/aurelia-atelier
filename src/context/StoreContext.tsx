@@ -19,11 +19,16 @@ import {
   SHOES_JEANS_CATEGORIES,
   SHOES_JEANS_SITE_SETTINGS,
 } from '@/data/products';
+import initialSnapshot from '@/data/store-snapshot.json';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 interface StoreContextType {
   storeMode: StoreMode;
-  setStoreMode: (mode: StoreMode) => void;
+  setStoreMode: (mode: StoreMode) => Promise<{ success: boolean; deployedVia?: string }>;
+  publishToProduction: (
+    overrideMode?: StoreMode
+  ) => Promise<{ success: boolean; deployedVia?: string; message?: string }>;
+  isSyncingProduction: boolean;
   products: Product[];
   categories: CategoryItem[];
   coupons: Coupon[];
@@ -59,6 +64,11 @@ interface StoreContextType {
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
+
+const DEFAULT_STORE_MODE: StoreMode =
+  (initialSnapshot.storeMode as StoreMode) === 'atelier_completo'
+    ? 'atelier_completo'
+    : 'zapatos_jeans';
 
 const SAMPLE_ORDERS: Order[] = [
   {
@@ -127,7 +137,8 @@ const SAMPLE_ORDERS: Order[] = [
 ];
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [storeMode, setStoreModeState] = useState<StoreMode>('atelier_completo');
+  const [storeMode, setStoreModeState] = useState<StoreMode>(DEFAULT_STORE_MODE);
+  const [isSyncingProduction, setIsSyncingProduction] = useState(false);
 
   // Mode 1: Modelo Actual (Atelier Completo)
   const [fullProducts, setFullProducts] = useState<Product[]>(INITIAL_PRODUCTS);
@@ -149,79 +160,82 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const categories = storeMode === 'zapatos_jeans' ? sjCategories : fullCategories;
   const siteSettings = storeMode === 'zapatos_jeans' ? sjSettings : fullSettings;
 
-  // Load state from localStorage
+  // Load state from localStorage AND sync with Global Server State (/api/store/state)
   useEffect(() => {
     try {
-      const savedMode = localStorage.getItem('aurelia_store_mode') as StoreMode | null;
-      if (savedMode === 'atelier_completo' || savedMode === 'zapatos_jeans') {
-        setStoreModeState(savedMode);
-      }
-
-      // Mode 1 state
       const savedProducts = localStorage.getItem('aurelia_products');
-      if (savedProducts) {
-        setFullProducts(JSON.parse(savedProducts));
-      } else {
-        localStorage.setItem('aurelia_products', JSON.stringify(INITIAL_PRODUCTS));
-      }
+      if (savedProducts) setFullProducts(JSON.parse(savedProducts));
 
       const savedCategories = localStorage.getItem('aurelia_categories');
-      if (savedCategories) {
-        setFullCategories(JSON.parse(savedCategories));
-      } else {
-        localStorage.setItem('aurelia_categories', JSON.stringify(CATEGORIES_METADATA));
-      }
+      if (savedCategories) setFullCategories(JSON.parse(savedCategories));
 
       const savedSettings = localStorage.getItem('aurelia_site_settings');
       if (savedSettings) {
         setFullSettings({ ...INITIAL_SITE_SETTINGS, ...JSON.parse(savedSettings) });
-      } else {
-        localStorage.setItem('aurelia_site_settings', JSON.stringify(INITIAL_SITE_SETTINGS));
       }
 
-      // Mode 2 state (Zapatos & Jeans)
       const savedSjProducts = localStorage.getItem('aurelia_sj_products');
-      if (savedSjProducts) {
-        setSjProducts(JSON.parse(savedSjProducts));
-      } else {
-        localStorage.setItem('aurelia_sj_products', JSON.stringify(SHOES_JEANS_PRODUCTS));
-      }
+      if (savedSjProducts) setSjProducts(JSON.parse(savedSjProducts));
 
       const savedSjCategories = localStorage.getItem('aurelia_sj_categories');
-      if (savedSjCategories) {
-        setSjCategories(JSON.parse(savedSjCategories));
-      } else {
-        localStorage.setItem('aurelia_sj_categories', JSON.stringify(SHOES_JEANS_CATEGORIES));
-      }
+      if (savedSjCategories) setSjCategories(JSON.parse(savedSjCategories));
 
       const savedSjSettings = localStorage.getItem('aurelia_sj_site_settings');
       if (savedSjSettings) {
         setSjSettings({ ...SHOES_JEANS_SITE_SETTINGS, ...JSON.parse(savedSjSettings) });
-      } else {
-        localStorage.setItem(
-          'aurelia_sj_site_settings',
-          JSON.stringify(SHOES_JEANS_SITE_SETTINGS)
-        );
       }
 
-      // Shared coupons & orders
       const savedCoupons = localStorage.getItem('aurelia_coupons_list');
-      if (savedCoupons) {
-        setCoupons(JSON.parse(savedCoupons));
-      } else {
-        localStorage.setItem('aurelia_coupons_list', JSON.stringify(INITIAL_COUPONS));
-      }
+      if (savedCoupons) setCoupons(JSON.parse(savedCoupons));
 
       const savedOrders = localStorage.getItem('aurelia_orders');
-      if (savedOrders) {
-        setOrders(JSON.parse(savedOrders));
-      } else {
-        localStorage.setItem('aurelia_orders', JSON.stringify(SAMPLE_ORDERS));
-      }
+      if (savedOrders) setOrders(JSON.parse(savedOrders));
     } catch (e) {
-      console.error('Error loading store state', e);
+      console.error('Error loading local store state', e);
     }
+
     setIsHydrated(true);
+
+    // Fetch authoritative server state so production visitors always see the Admin's chosen mode
+    (async () => {
+      try {
+        const res = await fetch('/api/store/state', { cache: 'no-store' });
+        if (!res.ok) return;
+        const serverState = await res.json();
+
+        if (
+          serverState.storeMode === 'atelier_completo' ||
+          serverState.storeMode === 'zapatos_jeans'
+        ) {
+          setStoreModeState(serverState.storeMode);
+          localStorage.setItem('aurelia_store_mode', serverState.storeMode);
+        }
+
+        if (Array.isArray(serverState.fullProducts) && serverState.fullProducts.length > 0) {
+          setFullProducts(serverState.fullProducts);
+        }
+        if (Array.isArray(serverState.fullCategories) && serverState.fullCategories.length > 0) {
+          setFullCategories(serverState.fullCategories);
+        }
+        if (serverState.fullSettings) {
+          setFullSettings({ ...INITIAL_SITE_SETTINGS, ...serverState.fullSettings });
+        }
+        if (Array.isArray(serverState.sjProducts) && serverState.sjProducts.length > 0) {
+          setSjProducts(serverState.sjProducts);
+        }
+        if (Array.isArray(serverState.sjCategories) && serverState.sjCategories.length > 0) {
+          setSjCategories(serverState.sjCategories);
+        }
+        if (serverState.sjSettings) {
+          setSjSettings({ ...SHOES_JEANS_SITE_SETTINGS, ...serverState.sjSettings });
+        }
+        if (Array.isArray(serverState.coupons) && serverState.coupons.length > 0) {
+          setCoupons(serverState.coupons);
+        }
+      } catch {
+        // Offline or fallback to localStorage
+      }
+    })();
 
     if (isSupabaseConfigured && supabase) {
       (async () => {
@@ -291,8 +305,52 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('aurelia_orders', JSON.stringify(orders));
   }, [orders, isHydrated]);
 
-  const setStoreMode = (mode: StoreMode) => {
+  // Publish current store state & mode to the server + GitHub/Production
+  const publishToProduction = async (overrideMode?: StoreMode) => {
+    const targetMode = overrideMode || storeMode;
+    setIsSyncingProduction(true);
+    try {
+      const res = await fetch('/api/store/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          storeMode: targetMode,
+          fullProducts,
+          fullCategories,
+          fullSettings,
+          sjProducts,
+          sjCategories,
+          sjSettings,
+          coupons,
+          deployToProduction: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return {
+          success: false,
+          message: data.message || 'No se pudo sincronizar con el servidor.',
+        };
+      }
+      return {
+        success: true,
+        deployedVia: data.deployedVia,
+      };
+    } catch {
+      return {
+        success: false,
+        message: 'Error de red al sincronizar con producción.',
+      };
+    } finally {
+      setIsSyncingProduction(false);
+    }
+  };
+
+  const setStoreMode = async (mode: StoreMode) => {
     setStoreModeState(mode);
+    localStorage.setItem('aurelia_store_mode', mode);
+    return publishToProduction(mode);
   };
 
   // Helper setters for the active mode
@@ -526,6 +584,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       value={{
         storeMode,
         setStoreMode,
+        publishToProduction,
+        isSyncingProduction,
         products,
         categories,
         coupons,

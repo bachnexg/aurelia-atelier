@@ -54,6 +54,8 @@ export default function AdminPage() {
   const {
     storeMode,
     setStoreMode,
+    publishToProduction,
+    isSyncingProduction,
     products,
     categories,
     coupons,
@@ -561,6 +563,22 @@ export default function AdminPage() {
               <Plus className="w-4 h-4" />
               <span>+ Nuevo Producto</span>
             </button>
+            <button
+              type="button"
+              disabled={isSyncingProduction}
+              onClick={async () => {
+                const res = await publishToProduction();
+                if (res.success) {
+                  showToast('¡Cambios publicados y desplegados en producción con éxito!');
+                } else {
+                  showToast(res.message || 'Guardado localmente.');
+                }
+              }}
+              className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white text-xs uppercase tracking-wider font-semibold rounded-xs transition-colors flex items-center gap-1.5 shadow-sm"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>{isSyncingProduction ? 'Desplegando...' : 'Publicar en Producción'}</span>
+            </button>
             <Link
               href="/"
               className="px-3.5 py-2.5 border border-neutral-300 hover:border-black text-neutral-800 text-xs uppercase tracking-wider font-semibold rounded-xs transition-colors flex items-center gap-1.5"
@@ -580,19 +598,30 @@ export default function AdminPage() {
                 Modo de Tienda Activo en Producción (Conmutador en 1 Clic)
               </h2>
             </div>
-            <span className="text-[11px] uppercase tracking-widest px-2.5 py-1 bg-neutral-900 text-[#c5a880] font-semibold rounded-xs w-fit">
-              Activo: {storeMode === 'zapatos_jeans' ? 'Modo 2 • Zapatos & Jeans' : 'Modo 1 • Atelier Completo'}
-            </span>
+            <div className="flex items-center gap-2">
+              {isSyncingProduction && (
+                <span className="text-[11px] uppercase tracking-wider text-emerald-700 font-semibold animate-pulse">
+                  Sincronizando con servidor y GitHub...
+                </span>
+              )}
+              <span className="text-[11px] uppercase tracking-widest px-2.5 py-1 bg-neutral-900 text-[#c5a880] font-semibold rounded-xs w-fit">
+                Activo: {storeMode === 'zapatos_jeans' ? 'Modo 2 • Zapatos & Jeans' : 'Modo 1 • Atelier Completo'}
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Card Mode 1: Modelo Actual */}
             <button
               type="button"
-              onClick={() => {
-                setStoreMode('atelier_completo');
+              disabled={isSyncingProduction}
+              onClick={async () => {
                 setProductCategoryFilter('todas');
-                showToast('Modo 1 Activado: Tienda Completa de Alta Costura (Modelo Actual).');
+                showToast('Activando Modo 1 y sincronizando con producción...');
+                const res = await setStoreMode('atelier_completo');
+                if (res.success) {
+                  showToast('✓ Modo 1 (Atelier Completo) activado y desplegado en producción.');
+                }
               }}
               className={`text-left p-4 rounded-sm border-2 transition-all flex items-start justify-between gap-4 ${
                 storeMode === 'atelier_completo'
@@ -627,10 +656,14 @@ export default function AdminPage() {
             {/* Card Mode 2: Exclusivo Zapatos y Pantalones Jean */}
             <button
               type="button"
-              onClick={() => {
-                setStoreMode('zapatos_jeans');
+              disabled={isSyncingProduction}
+              onClick={async () => {
                 setProductCategoryFilter('todas');
-                showToast('Modo 2 Activado: Tienda Especializada en Zapatos & Pantalones Jean.');
+                showToast('Activando Modo 2 (Zapatos & Jeans) y desplegando en producción...');
+                const res = await setStoreMode('zapatos_jeans');
+                if (res.success) {
+                  showToast('✓ Modo 2 (Zapatos & Pantalones Jean) activado y desplegado en producción.');
+                }
               }}
               className={`text-left p-4 rounded-sm border-2 transition-all flex items-start justify-between gap-4 ${
                 storeMode === 'zapatos_jeans'
