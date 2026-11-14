@@ -71,7 +71,7 @@ export default function AdminPage() {
     resetStoreToDefaults,
     updateOrderStatus,
   } = useStore();
-  const { isAdmin, switchRole } = useAuth();
+  const { isAdmin, isLoading } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('kpis');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -471,7 +471,17 @@ export default function AdminPage() {
     showToast('Testimonio eliminado.');
   };
 
-  // Guard if user switched to customer role while on /admin
+  // Guard if user is not authenticated as admin
+  if (isLoading) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center bg-[#f7f5f0] px-4">
+        <span className="text-xs uppercase tracking-widest text-neutral-500">
+          Verificando sesión criptográfica de administrador...
+        </span>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div className="min-h-[75vh] flex items-center justify-center bg-[#f7f5f0] px-4">
@@ -480,19 +490,18 @@ export default function AdminPage() {
             <ShieldAlert className="w-6 h-6" />
           </div>
           <h1 className="font-serif text-2xl text-neutral-900">
-            Acceso Restringido al Administrador
+            Autenticación de Administrador Requerida
           </h1>
           <p className="text-xs text-neutral-500 leading-relaxed">
-            Actualmente estás navegando con el rol de <strong>Cliente</strong>. Activa el modo Administrador para gestionar categorías, productos, cupones, diseño web y pedidos.
+            Por protocolo de seguridad en producción, el acceso a la consola requiere iniciar sesión con las credenciales maestras de <strong>Administrador</strong>.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <button
-              type="button"
-              onClick={() => switchRole('admin')}
+            <Link
+              href="/login?redirect=/admin&reason=admin_required"
               className="px-6 py-3 bg-neutral-900 hover:bg-black text-white text-xs uppercase tracking-widest font-semibold rounded-xs transition-colors"
             >
-              Activar Modo Admin Ahora
-            </button>
+              Iniciar Sesión como Admin
+            </Link>
             <Link
               href="/"
               className="px-6 py-3 border border-neutral-300 text-neutral-700 hover:border-black text-xs uppercase tracking-widest font-semibold rounded-xs transition-colors"

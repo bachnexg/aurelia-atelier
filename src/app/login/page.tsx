@@ -1,17 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Lock, Mail, ArrowRight, ShieldCheck, UserCheck } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Lock, Mail, ArrowRight, ShieldCheck, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
+
+  const redirectTo = searchParams.get('redirect');
+  const reason = searchParams.get('reason');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,70 +31,49 @@ export default function LoginPage() {
 
     const res = await login(email, password);
     if (res.success) {
-      if (email.includes('admin')) {
+      if (redirectTo) {
+        router.push(redirectTo);
+      } else if (res.role === 'admin') {
         router.push('/admin');
       } else {
         router.push('/perfil');
       }
+      router.refresh();
     } else {
-      setError(res.message || 'Error al iniciar sesión.');
+      setError(res.message || 'Credenciales inválidas.');
       setLoading(false);
-    }
-  };
-
-  const handleQuickDemo = (type: 'customer' | 'admin') => {
-    if (type === 'admin') {
-      login('admin@aurelia.com', 'admin123');
-      router.push('/admin');
-    } else {
-      login('camila@aurelia.com', 'password123');
-      router.push('/perfil');
     }
   };
 
   return (
     <div className="bg-[#faf8f5] min-h-[80vh] flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-white p-8 sm:p-10 rounded-sm border border-neutral-200 shadow-xl space-y-8">
-        
         <div className="text-center space-y-2">
-          <span className="text-[11px] uppercase tracking-[0.3em] text-[#c5a880] font-semibold block">
-            Acceso Privado
-          </span>
+          <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.3em] text-[#c5a880] font-semibold">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Acceso Cifrado & Protegido</span>
+          </div>
           <h1 className="font-serif text-3xl text-neutral-900 font-normal">
             Iniciar Sesión
           </h1>
           <p className="text-xs text-neutral-500">
-            Ingresa a tu cuenta de Aurelia Atelier para gestionar tus pedidos y direcciones.
+            Ingresa tus credenciales de Aurelia Atelier para acceder a tu cuenta o consola administrativa.
           </p>
         </div>
 
-        {/* Quick Demo Credentials Helper */}
-        <div className="p-3 bg-neutral-50 border border-neutral-200 rounded-xs space-y-2 text-xs">
-          <div className="flex items-center gap-1.5 text-neutral-700 font-semibold uppercase tracking-wider text-[10px]">
-            <UserCheck className="w-3.5 h-3.5 text-[#c5a880]" />
-            <span>Acceso rápido de prueba (1 clic):</span>
+        {reason === 'admin_required' && !error && (
+          <div className="bg-amber-50 text-amber-800 text-xs p-3.5 rounded-xs border border-amber-200 flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+            <span>
+              La ruta solicitada requiere autenticación verificada de <strong>Administrador</strong>.
+            </span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('customer')}
-              className="py-1.5 px-2 bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-800 text-[11px] rounded transition-colors font-medium"
-            >
-              Demo Cliente
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo('admin')}
-              className="py-1.5 px-2 bg-neutral-900 hover:bg-black text-white text-[11px] rounded transition-colors font-medium"
-            >
-              Demo Administrador
-            </button>
-          </div>
-        </div>
+        )}
 
         {error && (
-          <div className="bg-rose-50 text-rose-700 text-xs p-3 rounded border border-rose-200">
-            {error}
+          <div className="bg-rose-50 text-rose-700 text-xs p-3.5 rounded-xs border border-rose-200 flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -103,6 +87,7 @@ export default function LoginPage() {
               <input
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@email.com"
@@ -116,37 +101,39 @@ export default function LoginPage() {
               <label className="block text-xs uppercase tracking-wider text-neutral-700 font-semibold">
                 Contraseña
               </label>
-              <button
-                type="button"
-                onClick={() => alert('Para restablecer tu contraseña, se ha enviado un correo con instrucciones (Modo Demostración).')}
-                className="text-[11px] text-neutral-500 hover:text-black underline"
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
             </div>
             <div className="relative">
               <Lock className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full text-xs pl-9 pr-3 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xs focus:bg-white focus:outline-none focus:border-black"
+                placeholder="••••••••••••"
+                className="w-full text-xs pl-9 pr-10 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xs focus:bg-white focus:outline-none focus:border-black"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-neutral-900 hover:bg-black text-white text-xs uppercase tracking-widest font-semibold transition-all rounded-xs shadow-md flex items-center justify-center gap-2 mt-4"
+            className="w-full py-3.5 bg-neutral-900 hover:bg-black text-white text-xs uppercase tracking-widest font-semibold transition-all rounded-xs shadow-md flex items-center justify-center gap-2 mt-4 disabled:opacity-60"
           >
             {loading ? (
-              <span>Iniciando sesión...</span>
+              <span>Verificando credenciales...</span>
             ) : (
               <>
-                <span>Acceder a mi Cuenta</span>
+                <span>Acceder de Forma Segura</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -154,13 +141,29 @@ export default function LoginPage() {
         </form>
 
         <div className="text-center pt-2 border-t border-neutral-100 text-xs text-neutral-600">
-          <span>¿Aún no tienes cuenta en el Atelier? </span>
-          <Link href="/registro" className="font-semibold text-black hover:underline uppercase tracking-wider">
+          <span>¿Aún no tienes cuenta de cliente en el Atelier? </span>
+          <Link
+            href="/registro"
+            className="font-semibold text-black hover:underline uppercase tracking-wider"
+          >
             Registrarme
           </Link>
         </div>
-
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[80vh] flex items-center justify-center text-xs uppercase tracking-widest text-neutral-400">
+          Cargando acceso seguro...
+        </div>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
   );
 }

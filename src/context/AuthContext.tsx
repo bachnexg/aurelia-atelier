@@ -5,111 +5,148 @@ import { User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
+  isLoading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (email: string, pass: string) => Promise<{ success: boolean; message?: string }>;
-  register: (name: string, email: string, pass: string) => Promise<{ success: boolean; message?: string }>;
-  logout: () => void;
-  switchRole: (role: 'customer' | 'admin') => void;
+  login: (
+    email: string,
+    pass: string
+  ) => Promise<{ success: boolean; message?: string; role?: 'customer' | 'admin' }>;
+  register: (
+    name: string,
+    email: string,
+    pass: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DEMO_USER: User = {
-  id: 'usr-demo-01',
-  name: 'Camila Valmont',
-  email: 'camila@aurelia.com',
-  role: 'customer',
-  phone: '+34 622 110 998',
-};
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(DEMO_USER);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Verify server-side HttpOnly session cookie on load
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('aurelia_auth_user');
-      if (saved) {
-        setUser(JSON.parse(saved));
+    let mounted = true;
+    (async () => {
+      try {
+        // Clear any legacy insecure localStorage auth keys
+        localStorage.removeItem('aurelia_auth_user');
+
+        const res = await fetch('/api/auth/session', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        const data = await res.json();
+        if (mounted && data.authenticated && data.user) {
+          setUser(data.user);
+        }
+      } catch (e) {
+        console.error('Error verifying session:', e);
+      } finally {
+        if (mounted) setIsLoading(false);
       }
-    } catch (e) {
-      console.error('Error loading auth user', e);
-    }
-    setIsHydrated(true);
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  useEffect(() => {
-    if (!isHydrated) return;
+  const login = async (email: string, password: string) => {
     try {
-      if (user) {
-        localStorage.setItem('aurelia_auth_user', JSON.stringify(user));
-      } else {
-        localStorage.removeItem('aurelia_auth_user');
-      }
-    } catch (e) {
-      console.error('Error saving auth user', e);
-    }
-  }, [user, isHydrated]);
-
-  const login = async (email: string) => {
-    const isAdminUser = email.toLowerCase().includes('admin') || email.toLowerCase() === 'admin@aurelia.com';
-    const loggedUser: User = {
-      id: `usr-${Date.now()}`,
-      name: isAdminUser ? 'Director Atelier (Admin)' : (email.split('@')[0] || 'Cliente'),
-      email,
-      role: isAdminUser ? 'admin' : 'customer',
-      phone: '+34 600 000 000',
-    };
-    setUser(loggedUser);
-    return { success: true };
-  };
-
-  const register = async (name: string, email: string) => {
-    const newUser: User = {
-      id: `usr-${Date.now()}`,
-      name,
-      email,
-      role: 'customer',
-      phone: '',
-    };
-    setUser(newUser);
-    return { success: true };
-  };
-
-  const logout = () => {
-    setUser(null);
-  };
-
-  const switchRole = (role: 'customer' | 'admin') => {
-    if (!user) {
-      setUser({
-        id: `usr-${Date.now()}`,
-        name: role === 'admin' ? 'Administrador Aurelia' : 'Cliente Aurelia',
-        email: role === 'admin' ? 'admin@aurelia.com' : 'cliente@aurelia.com',
-        role,
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
       });
-      return;
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        return {
+          success: false,
+          message: data.message || 'Credenciales inválidas.',
+        };
+      }
+
+      setUser(data.user);
+      return {
+        success: true,
+        role: data.user.role,
+      };
+    } catch {
+      return {
+        success: false,
+        message: 'Error de conexión con el servidor de autenticación.',
+      };
     }
-    setUser({ ...user, role });
+  };
+
+  const register = async (name: string, email: string, password: string) => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        return {
+          success: false,
+          message: data.message || 'No se pudo completar el registro.',
+        };
+      }
+
+      setUser(data.user);
+      return { success: true };
+    } catch {
+      return {
+        success: false,
+        message: 'Error de red al registrar la cuenta.',
+      };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (e) {
+      console.error('Error logging out:', e);
+    } finally {
+      localStorage.removeItem('aurelia_auth_user');
+      setUser(null);
+    }
   };
 
   const updateProfile = (data: Partial<User>) => {
     if (!user) return;
-    setUser({ ...user, ...data });
+    // Never allow client-side role escalation via updateProfile
+    const { role: _ignoredRole, ...safeData } = data;
+    void _ignoredRole;
+    setUser({ ...user, ...safeData });
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        isLoading,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
         login,
         register,
         logout,
-        switchRole,
         updateProfile,
       }}
     >

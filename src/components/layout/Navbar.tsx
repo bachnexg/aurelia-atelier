@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Search,
   ShoppingBag,
@@ -12,6 +12,7 @@ import {
   X,
   ChevronDown,
   ShieldCheck,
+  LogOut,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -21,9 +22,10 @@ import { SearchModal } from '@/components/search/SearchModal';
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { totalItemsCount, openCart } = useCart();
   const { wishlist } = useWishlist();
-  const { user, isAdmin, switchRole } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const { categories, siteSettings } = useStore();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -41,6 +43,11 @@ export function Navbar() {
   const dropdownCategories = categories.filter(
     (c) => c.filterType !== 'gender' && !['mujer', 'hombre', 'unisex'].includes(c.slug)
   );
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
 
   return (
     <>
@@ -168,7 +175,7 @@ export function Navbar() {
               </Link>
             </div>
 
-            {/* Right Icons: Search, Admin Toggle, Wishlist, Account, Cart */}
+            {/* Right Icons: Search, Verified Admin Link, Wishlist, Account, Cart */}
             <div className="flex items-center space-x-3 sm:space-x-5">
               {/* Desktop Search Trigger */}
               <button
@@ -180,38 +187,40 @@ export function Navbar() {
                 <Search className="w-5 h-5 stroke-[1.6]" />
               </button>
 
-              {/* Admin Mode Switcher Pill */}
-              <button
-                type="button"
-                onClick={() => switchRole(isAdmin ? 'customer' : 'admin')}
-                className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] uppercase tracking-wider rounded-full border transition-all ${
-                  isAdmin
-                    ? 'bg-neutral-900 text-white border-neutral-900 hover:bg-black'
-                    : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
-                }`}
-                title="Cambiar rol para probar panel de administración"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-[#c5a880]" />
-                <span>{isAdmin ? 'Modo Admin' : 'Modo Cliente'}</span>
-              </button>
-
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="hidden md:inline-block text-[11px] tracking-widest uppercase bg-[#c5a880] text-black font-semibold px-2.5 py-1 rounded hover:bg-[#b59567] transition-colors"
+                  className="hidden sm:inline-flex items-center gap-1.5 text-[11px] tracking-widest uppercase bg-neutral-900 text-white font-semibold px-3 py-1.5 rounded-xs hover:bg-black transition-colors"
                 >
-                  Panel Admin
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#c5a880]" />
+                  <span>Panel Admin</span>
                 </Link>
               )}
 
               {/* Account / User */}
               <Link
-                href={user ? '/perfil' : '/login'}
-                className="text-neutral-700 hover:text-black transition-colors p-1"
-                title={user ? `Cuenta de ${user.name}` : 'Iniciar Sesión'}
+                href={user ? (isAdmin ? '/admin' : '/perfil') : '/login'}
+                className="text-neutral-700 hover:text-black transition-colors p-1 flex items-center gap-1.5"
+                title={user ? `Sesión activa: ${user.name}` : 'Iniciar Sesión'}
               >
                 <UserIcon className="w-5 h-5 stroke-[1.6]" />
+                {user && (
+                  <span className="hidden xl:inline text-[11px] uppercase tracking-wider font-medium text-neutral-800 max-w-[110px] truncate">
+                    {user.name.split(' ')[0]}
+                  </span>
+                )}
               </Link>
+
+              {user && (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hidden sm:inline-flex text-neutral-500 hover:text-rose-600 transition-colors p-1"
+                  title="Cerrar sesión segura"
+                >
+                  <LogOut className="w-4 h-4 stroke-[1.6]" />
+                </button>
+              )}
 
               {/* Wishlist */}
               <Link
@@ -250,12 +259,22 @@ export function Navbar() {
           <div className="lg:hidden border-t border-neutral-100 bg-white px-6 py-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
               <span className="text-xs uppercase tracking-widest text-neutral-400">Navegación</span>
-              <button
-                onClick={() => switchRole(isAdmin ? 'customer' : 'admin')}
-                className="text-[11px] uppercase tracking-wider text-neutral-800 font-medium"
-              >
-                {isAdmin ? '✓ Admin Activo' : 'Activar Admin'}
-              </button>
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  className="text-[11px] uppercase tracking-wider text-rose-600 font-semibold"
+                >
+                  Cerrar Sesión
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-[11px] uppercase tracking-wider text-neutral-900 font-semibold"
+                >
+                  Iniciar Sesión →
+                </Link>
+              )}
             </div>
             <div className="flex flex-col space-y-3 text-sm tracking-[0.15em] uppercase font-medium">
               <Link
