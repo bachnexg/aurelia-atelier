@@ -72,7 +72,10 @@ function ShopContent() {
     { label: 'Unisex', value: 'unisex' },
   ];
 
-  const sizes = ['todos', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única'];
+  const sizes = useMemo(() => {
+    const uniqueSizes = Array.from(new Set(products.flatMap((p) => p.sizes)));
+    return ['todos', ...uniqueSizes];
+  }, [products]);
 
   const colors = [
     { name: 'todos', label: 'Todos' },

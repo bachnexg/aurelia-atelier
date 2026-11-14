@@ -12,7 +12,7 @@ interface SearchModalProps {
 }
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
-  const { products } = useStore();
+  const { products, storeMode } = useStore();
   const [query, setQuery] = useState('');
 
   // Close on ESC
@@ -53,7 +53,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     );
   }, [query, products]);
 
-  const trendingTags = ['Abrigo lana', 'Vestido seda', 'Blazer cruzado', 'Denim selvedge', 'Cachemira', 'Lino'];
+  const trendingTags =
+    storeMode === 'zapatos_jeans'
+      ? ['Botín Chelsea', 'Sneaker Nappa', 'Jeans Selvedge', 'Wide-Leg', 'Mocasín Loafer', 'Denim Negro']
+      : ['Abrigo lana', 'Vestido seda', 'Blazer cruzado', 'Denim selvedge', 'Cachemira', 'Lino'];
 
   if (!isOpen) return null;
 
@@ -126,24 +129,40 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <Link
-                      href="/shop?category=chaquetas"
+                      href={
+                        storeMode === 'zapatos_jeans'
+                          ? '/shop?category=zapatos'
+                          : '/shop?category=chaquetas'
+                      }
                       onClick={onClose}
                       className="group p-3 border border-neutral-100 hover:border-neutral-900 transition-colors rounded-sm"
                     >
                       <span className="block text-xs uppercase tracking-wider font-medium text-neutral-900 group-hover:underline">
-                        Abrigos & Sastrería →
+                        {storeMode === 'zapatos_jeans'
+                          ? 'Zapatos & Calzado →'
+                          : 'Abrigos & Sastrería →'}
                       </span>
-                      <span className="text-[11px] text-neutral-400">Prendas icónicas</span>
+                      <span className="text-[11px] text-neutral-400">
+                        {storeMode === 'zapatos_jeans' ? 'Piel italiana' : 'Prendas icónicas'}
+                      </span>
                     </Link>
                     <Link
-                      href="/shop?category=vestidos"
+                      href={
+                        storeMode === 'zapatos_jeans'
+                          ? '/shop?category=jeans'
+                          : '/shop?category=vestidos'
+                      }
                       onClick={onClose}
                       className="group p-3 border border-neutral-100 hover:border-neutral-900 transition-colors rounded-sm"
                     >
                       <span className="block text-xs uppercase tracking-wider font-medium text-neutral-900 group-hover:underline">
-                        Seda & Noche →
+                        {storeMode === 'zapatos_jeans'
+                          ? 'Pantalones Jean →'
+                          : 'Seda & Noche →'}
                       </span>
-                      <span className="text-[11px] text-neutral-400">Siluetas fluidas</span>
+                      <span className="text-[11px] text-neutral-400">
+                        {storeMode === 'zapatos_jeans' ? 'Denim Selvedge' : 'Siluetas fluidas'}
+                      </span>
                     </Link>
                     <Link
                       href="/shop?sale=true"

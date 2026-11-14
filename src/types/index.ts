@@ -1,5 +1,7 @@
 export type CategorySlug = string;
 
+export type StoreMode = 'atelier_completo' | 'zapatos_jeans';
+
 export type Gender = 'hombre' | 'mujer' | 'unisex';
 
 export interface CategoryItem {

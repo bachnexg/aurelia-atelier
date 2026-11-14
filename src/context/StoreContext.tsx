@@ -8,16 +8,22 @@ import {
   CategoryItem,
   Coupon,
   SiteSettings,
+  StoreMode,
 } from '@/types';
 import {
   INITIAL_PRODUCTS,
   CATEGORIES_METADATA,
   INITIAL_COUPONS,
   INITIAL_SITE_SETTINGS,
+  SHOES_JEANS_PRODUCTS,
+  SHOES_JEANS_CATEGORIES,
+  SHOES_JEANS_SITE_SETTINGS,
 } from '@/data/products';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 interface StoreContextType {
+  storeMode: StoreMode;
+  setStoreMode: (mode: StoreMode) => void;
   products: Product[];
   categories: CategoryItem[];
   coupons: Coupon[];
@@ -25,7 +31,7 @@ interface StoreContextType {
   siteSettings: SiteSettings;
   isSupabaseConnected: boolean;
 
-  // Products CRUD
+  // Products CRUD (operates on active storeMode)
   addProduct: (product: Omit<Product, 'id'>) => Product;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
@@ -33,7 +39,7 @@ interface StoreContextType {
   getProductBySlug: (slug: string) => Product | undefined;
   getProductById: (id: string) => Product | undefined;
 
-  // Categories CRUD
+  // Categories CRUD (operates on active storeMode)
   addCategory: (category: Omit<CategoryItem, 'id'>) => CategoryItem;
   updateCategory: (id: string, category: Partial<CategoryItem>) => void;
   deleteCategory: (id: string) => void;
@@ -43,7 +49,7 @@ interface StoreContextType {
   updateCoupon: (code: string, coupon: Partial<Coupon>) => void;
   deleteCoupon: (code: string) => void;
 
-  // Site Settings CMS
+  // Site Settings CMS (operates on active storeMode)
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
   resetStoreToDefaults: () => void;
 
@@ -121,42 +127,89 @@ const SAMPLE_ORDERS: Order[] = [
 ];
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [categories, setCategories] = useState<CategoryItem[]>(CATEGORIES_METADATA);
+  const [storeMode, setStoreModeState] = useState<StoreMode>('atelier_completo');
+
+  // Mode 1: Modelo Actual (Atelier Completo)
+  const [fullProducts, setFullProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [fullCategories, setFullCategories] = useState<CategoryItem[]>(CATEGORIES_METADATA);
+  const [fullSettings, setFullSettings] = useState<SiteSettings>(INITIAL_SITE_SETTINGS);
+
+  // Mode 2: Modo Zapatos & Pantalones Jean
+  const [sjProducts, setSjProducts] = useState<Product[]>(SHOES_JEANS_PRODUCTS);
+  const [sjCategories, setSjCategories] = useState<CategoryItem[]>(SHOES_JEANS_CATEGORIES);
+  const [sjSettings, setSjSettings] = useState<SiteSettings>(SHOES_JEANS_SITE_SETTINGS);
+
+  // Shared across modes
   const [coupons, setCoupons] = useState<Coupon[]>(INITIAL_COUPONS);
   const [orders, setOrders] = useState<Order[]>(SAMPLE_ORDERS);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(INITIAL_SITE_SETTINGS);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load state from localStorage & optionally sync from Supabase
+  // Active pointers based on storeMode
+  const products = storeMode === 'zapatos_jeans' ? sjProducts : fullProducts;
+  const categories = storeMode === 'zapatos_jeans' ? sjCategories : fullCategories;
+  const siteSettings = storeMode === 'zapatos_jeans' ? sjSettings : fullSettings;
+
+  // Load state from localStorage
   useEffect(() => {
     try {
+      const savedMode = localStorage.getItem('aurelia_store_mode') as StoreMode | null;
+      if (savedMode === 'atelier_completo' || savedMode === 'zapatos_jeans') {
+        setStoreModeState(savedMode);
+      }
+
+      // Mode 1 state
       const savedProducts = localStorage.getItem('aurelia_products');
       if (savedProducts) {
-        setProducts(JSON.parse(savedProducts));
+        setFullProducts(JSON.parse(savedProducts));
       } else {
         localStorage.setItem('aurelia_products', JSON.stringify(INITIAL_PRODUCTS));
       }
 
       const savedCategories = localStorage.getItem('aurelia_categories');
       if (savedCategories) {
-        setCategories(JSON.parse(savedCategories));
+        setFullCategories(JSON.parse(savedCategories));
       } else {
         localStorage.setItem('aurelia_categories', JSON.stringify(CATEGORIES_METADATA));
       }
 
+      const savedSettings = localStorage.getItem('aurelia_site_settings');
+      if (savedSettings) {
+        setFullSettings({ ...INITIAL_SITE_SETTINGS, ...JSON.parse(savedSettings) });
+      } else {
+        localStorage.setItem('aurelia_site_settings', JSON.stringify(INITIAL_SITE_SETTINGS));
+      }
+
+      // Mode 2 state (Zapatos & Jeans)
+      const savedSjProducts = localStorage.getItem('aurelia_sj_products');
+      if (savedSjProducts) {
+        setSjProducts(JSON.parse(savedSjProducts));
+      } else {
+        localStorage.setItem('aurelia_sj_products', JSON.stringify(SHOES_JEANS_PRODUCTS));
+      }
+
+      const savedSjCategories = localStorage.getItem('aurelia_sj_categories');
+      if (savedSjCategories) {
+        setSjCategories(JSON.parse(savedSjCategories));
+      } else {
+        localStorage.setItem('aurelia_sj_categories', JSON.stringify(SHOES_JEANS_CATEGORIES));
+      }
+
+      const savedSjSettings = localStorage.getItem('aurelia_sj_site_settings');
+      if (savedSjSettings) {
+        setSjSettings({ ...SHOES_JEANS_SITE_SETTINGS, ...JSON.parse(savedSjSettings) });
+      } else {
+        localStorage.setItem(
+          'aurelia_sj_site_settings',
+          JSON.stringify(SHOES_JEANS_SITE_SETTINGS)
+        );
+      }
+
+      // Shared coupons & orders
       const savedCoupons = localStorage.getItem('aurelia_coupons_list');
       if (savedCoupons) {
         setCoupons(JSON.parse(savedCoupons));
       } else {
         localStorage.setItem('aurelia_coupons_list', JSON.stringify(INITIAL_COUPONS));
-      }
-
-      const savedSettings = localStorage.getItem('aurelia_site_settings');
-      if (savedSettings) {
-        setSiteSettings({ ...INITIAL_SITE_SETTINGS, ...JSON.parse(savedSettings) });
-      } else {
-        localStorage.setItem('aurelia_site_settings', JSON.stringify(INITIAL_SITE_SETTINGS));
       }
 
       const savedOrders = localStorage.getItem('aurelia_orders');
@@ -170,7 +223,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
     setIsHydrated(true);
 
-    // Optional cloud sync if Supabase credentials are provided
     if (isSupabaseConfigured && supabase) {
       (async () => {
         try {
@@ -187,7 +239,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             );
           }
         } catch {
-          // Fallback silently to localStorage if table doesn't exist yet
+          // Fallback silently
         }
       })();
     }
@@ -196,48 +248,77 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   // Persist changes to localStorage
   useEffect(() => {
     if (!isHydrated) return;
-    try {
-      localStorage.setItem('aurelia_products', JSON.stringify(products));
-    } catch (e) {
-      console.error('Error saving products', e);
-    }
-  }, [products, isHydrated]);
+    localStorage.setItem('aurelia_store_mode', storeMode);
+  }, [storeMode, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    try {
-      localStorage.setItem('aurelia_categories', JSON.stringify(categories));
-    } catch (e) {
-      console.error('Error saving categories', e);
-    }
-  }, [categories, isHydrated]);
+    localStorage.setItem('aurelia_products', JSON.stringify(fullProducts));
+  }, [fullProducts, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    try {
-      localStorage.setItem('aurelia_coupons_list', JSON.stringify(coupons));
-    } catch (e) {
-      console.error('Error saving coupons', e);
-    }
+    localStorage.setItem('aurelia_categories', JSON.stringify(fullCategories));
+  }, [fullCategories, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem('aurelia_site_settings', JSON.stringify(fullSettings));
+  }, [fullSettings, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem('aurelia_sj_products', JSON.stringify(sjProducts));
+  }, [sjProducts, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem('aurelia_sj_categories', JSON.stringify(sjCategories));
+  }, [sjCategories, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem('aurelia_sj_site_settings', JSON.stringify(sjSettings));
+  }, [sjSettings, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem('aurelia_coupons_list', JSON.stringify(coupons));
   }, [coupons, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    try {
-      localStorage.setItem('aurelia_site_settings', JSON.stringify(siteSettings));
-    } catch (e) {
-      console.error('Error saving site settings', e);
-    }
-  }, [siteSettings, isHydrated]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    try {
-      localStorage.setItem('aurelia_orders', JSON.stringify(orders));
-    } catch (e) {
-      console.error('Error saving orders', e);
-    }
+    localStorage.setItem('aurelia_orders', JSON.stringify(orders));
   }, [orders, isHydrated]);
+
+  const setStoreMode = (mode: StoreMode) => {
+    setStoreModeState(mode);
+  };
+
+  // Helper setters for the active mode
+  const setActiveProducts = (updater: (prev: Product[]) => Product[]) => {
+    if (storeMode === 'zapatos_jeans') {
+      setSjProducts(updater);
+    } else {
+      setFullProducts(updater);
+    }
+  };
+
+  const setActiveCategories = (updater: (prev: CategoryItem[]) => CategoryItem[]) => {
+    if (storeMode === 'zapatos_jeans') {
+      setSjCategories(updater);
+    } else {
+      setFullCategories(updater);
+    }
+  };
+
+  const setActiveSettings = (updater: (prev: SiteSettings) => SiteSettings) => {
+    if (storeMode === 'zapatos_jeans') {
+      setSjSettings(updater);
+    } else {
+      setFullSettings(updater);
+    }
+  };
 
   // --- PRODUCTS CRUD ---
   const addProduct = (productData: Omit<Product, 'id'>) => {
@@ -245,18 +326,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       ...productData,
       id: `prod-${Date.now()}`,
     };
-    setProducts((prev) => [newProduct, ...prev]);
+    setActiveProducts((prev) => [newProduct, ...prev]);
     return newProduct;
   };
 
   const updateProduct = (id: string, updatedFields: Partial<Product>) => {
-    setProducts((prev) =>
+    setActiveProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p))
     );
   };
 
   const deleteProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setActiveProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
   const duplicateProduct = (id: string) => {
@@ -269,16 +350,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       slug: `${source.slug}-copia-${Date.now().toString().slice(-4)}`,
       sku: `${source.sku}-CP`,
     };
-    setProducts((prev) => [copy, ...prev]);
+    setActiveProducts((prev) => [copy, ...prev]);
     return copy;
   };
 
   const getProductBySlug = (slug: string) => {
-    return products.find((p) => p.slug === slug);
+    return (
+      products.find((p) => p.slug === slug) ||
+      fullProducts.find((p) => p.slug === slug) ||
+      sjProducts.find((p) => p.slug === slug)
+    );
   };
 
   const getProductById = (id: string) => {
-    return products.find((p) => p.id === id);
+    return (
+      products.find((p) => p.id === id) ||
+      fullProducts.find((p) => p.id === id) ||
+      sjProducts.find((p) => p.id === id)
+    );
   };
 
   // --- CATEGORIES CRUD ---
@@ -287,19 +376,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       ...categoryData,
       id: `cat-${Date.now()}`,
     };
-    setCategories((prev) => [...prev, newCat]);
+    setActiveCategories((prev) => [...prev, newCat]);
     return newCat;
   };
 
   const updateCategory = (id: string, updatedFields: Partial<CategoryItem>) => {
-    setCategories((prev) =>
+    setActiveCategories((prev) =>
       prev.map((c) => {
         if (c.id !== id) return c;
         const updated = { ...c, ...updatedFields };
-        // If slug changed, also migrate products that belonged to old slug
-        if (updatedFields.slug && updatedFields.slug !== c.slug && c.filterType !== 'gender') {
-          setProducts((prods) =>
-            prods.map((p) => (p.category === c.slug ? { ...p, category: updatedFields.slug! } : p))
+        if (
+          updatedFields.slug &&
+          updatedFields.slug !== c.slug &&
+          c.filterType !== 'gender'
+        ) {
+          setActiveProducts((prods) =>
+            prods.map((p) =>
+              p.category === c.slug ? { ...p, category: updatedFields.slug! } : p
+            )
           );
         }
         return updated;
@@ -308,7 +402,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteCategory = (id: string) => {
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    setActiveCategories((prev) => prev.filter((c) => c.id !== id));
   };
 
   // --- COUPONS CRUD ---
@@ -332,23 +426,47 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   // --- SITE SETTINGS CMS ---
   const updateSiteSettings = (updated: Partial<SiteSettings>) => {
-    setSiteSettings((prev) => ({ ...prev, ...updated }));
+    setActiveSettings((prev) => ({ ...prev, ...updated }));
   };
 
   const resetStoreToDefaults = () => {
-    setProducts(INITIAL_PRODUCTS);
-    setCategories(CATEGORIES_METADATA);
+    setFullProducts(INITIAL_PRODUCTS);
+    setFullCategories(CATEGORIES_METADATA);
+    setFullSettings(INITIAL_SITE_SETTINGS);
+    setSjProducts(SHOES_JEANS_PRODUCTS);
+    setSjCategories(SHOES_JEANS_CATEGORIES);
+    setSjSettings(SHOES_JEANS_SITE_SETTINGS);
     setCoupons(INITIAL_COUPONS);
-    setSiteSettings(INITIAL_SITE_SETTINGS);
     setOrders(SAMPLE_ORDERS);
+
     localStorage.setItem('aurelia_products', JSON.stringify(INITIAL_PRODUCTS));
     localStorage.setItem('aurelia_categories', JSON.stringify(CATEGORIES_METADATA));
-    localStorage.setItem('aurelia_coupons_list', JSON.stringify(INITIAL_COUPONS));
     localStorage.setItem('aurelia_site_settings', JSON.stringify(INITIAL_SITE_SETTINGS));
+    localStorage.setItem('aurelia_sj_products', JSON.stringify(SHOES_JEANS_PRODUCTS));
+    localStorage.setItem('aurelia_sj_categories', JSON.stringify(SHOES_JEANS_CATEGORIES));
+    localStorage.setItem('aurelia_sj_site_settings', JSON.stringify(SHOES_JEANS_SITE_SETTINGS));
+    localStorage.setItem('aurelia_coupons_list', JSON.stringify(INITIAL_COUPONS));
     localStorage.setItem('aurelia_orders', JSON.stringify(SAMPLE_ORDERS));
   };
 
   // --- ORDERS & AUTOMATIC STOCK MANAGEMENT ---
+  const applyStockDelta = (items: Order['items'], multiplier: -1 | 1) => {
+    const updateList = (list: Product[]) =>
+      list.map((product) => {
+        const orderedQty = items
+          .filter((item) => item.product.id === product.id)
+          .reduce((sum, item) => sum + item.quantity, 0);
+        if (orderedQty === 0) return product;
+        return {
+          ...product,
+          stock: Math.max(0, product.stock + multiplier * orderedQty),
+        };
+      });
+
+    setFullProducts(updateList);
+    setSjProducts(updateList);
+  };
+
   const createOrder = (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>) => {
     const randomSuffix = Math.floor(10000 + Math.random() * 90000);
     const trackingSuffix = Math.floor(1000000 + Math.random() * 9000000);
@@ -361,23 +479,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       trackingNumber: orderData.trackingNumber || `AUR-EXP-${trackingSuffix}`,
     };
 
-    // Deduct stock automatically for every purchased item
-    setProducts((prevProducts) =>
-      prevProducts.map((product) => {
-        const orderedQty = orderData.items
-          .filter((item) => item.product.id === product.id)
-          .reduce((sum, item) => sum + item.quantity, 0);
-        if (orderedQty === 0) return product;
-        return {
-          ...product,
-          stock: Math.max(0, product.stock - orderedQty),
-        };
-      })
-    );
-
+    applyStockDelta(orderData.items, -1);
     setOrders((prev) => [newOrder, ...prev]);
 
-    // Sync to Supabase if configured
     if (isSupabaseConfigured && supabase) {
       supabase
         .from('orders')
@@ -406,29 +510,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setOrders((prev) =>
       prev.map((o) => {
         if (o.id !== orderId) return o;
-        // Restore stock if transitioning to Cancelado
         if (o.status !== 'Cancelado' && status === 'Cancelado') {
-          setProducts((prevProducts) =>
-            prevProducts.map((product) => {
-              const orderedQty = o.items
-                .filter((item) => item.product.id === product.id)
-                .reduce((sum, item) => sum + item.quantity, 0);
-              if (orderedQty === 0) return product;
-              return { ...product, stock: product.stock + orderedQty };
-            })
-          );
+          applyStockDelta(o.items, 1);
         }
-        // Deduct stock again if un-cancelling an order
         if (o.status === 'Cancelado' && status !== 'Cancelado') {
-          setProducts((prevProducts) =>
-            prevProducts.map((product) => {
-              const orderedQty = o.items
-                .filter((item) => item.product.id === product.id)
-                .reduce((sum, item) => sum + item.quantity, 0);
-              if (orderedQty === 0) return product;
-              return { ...product, stock: Math.max(0, product.stock - orderedQty) };
-            })
-          );
+          applyStockDelta(o.items, -1);
         }
         return { ...o, status };
       })
@@ -438,6 +524,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   return (
     <StoreContext.Provider
       value={{
+        storeMode,
+        setStoreMode,
         products,
         categories,
         coupons,

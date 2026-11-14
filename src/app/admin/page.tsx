@@ -52,6 +52,8 @@ type AdminTab =
 
 export default function AdminPage() {
   const {
+    storeMode,
+    setStoreMode,
     products,
     categories,
     coupons,
@@ -566,6 +568,99 @@ export default function AdminPage() {
               <Eye className="w-3.5 h-3.5" />
               <span>Ver Tienda</span>
             </Link>
+          </div>
+        </div>
+
+        {/* STORE MODE SELECTOR BANNER (2 MODES FOR ADMIN) */}
+        <div className="bg-white p-5 sm:p-6 rounded-sm border border-neutral-200 shadow-xs mb-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-100 pb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#c5a880]" />
+              <h2 className="font-serif text-base sm:text-lg text-neutral-900 font-semibold">
+                Modo de Tienda Activo en Producción (Conmutador en 1 Clic)
+              </h2>
+            </div>
+            <span className="text-[11px] uppercase tracking-widest px-2.5 py-1 bg-neutral-900 text-[#c5a880] font-semibold rounded-xs w-fit">
+              Activo: {storeMode === 'zapatos_jeans' ? 'Modo 2 • Zapatos & Jeans' : 'Modo 1 • Atelier Completo'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Card Mode 1: Modelo Actual */}
+            <button
+              type="button"
+              onClick={() => {
+                setStoreMode('atelier_completo');
+                setProductCategoryFilter('todas');
+                showToast('Modo 1 Activado: Tienda Completa de Alta Costura (Modelo Actual).');
+              }}
+              className={`text-left p-4 rounded-sm border-2 transition-all flex items-start justify-between gap-4 ${
+                storeMode === 'atelier_completo'
+                  ? 'border-neutral-900 bg-[#faf8f5] shadow-sm'
+                  : 'border-neutral-200 bg-white hover:border-neutral-400 opacity-80 hover:opacity-100'
+              }`}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 bg-neutral-900 text-white rounded-xs">
+                    Modo 1
+                  </span>
+                  <span className="font-serif text-base font-semibold text-neutral-900">
+                    Modelo Actual • Atelier Completo
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-600 leading-relaxed">
+                  Catálogo integral de moda de lujo: Chaquetas, Abrigos, Vestidos de Seda, Camisas de Lino, Pantalones, Jeans, Punto y Accesorios.
+                </p>
+              </div>
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-1 ${
+                  storeMode === 'atelier_completo'
+                    ? 'bg-emerald-600 text-white'
+                    : 'border border-neutral-300 text-transparent'
+                }`}
+              >
+                <Check className="w-3.5 h-3.5" />
+              </div>
+            </button>
+
+            {/* Card Mode 2: Exclusivo Zapatos y Pantalones Jean */}
+            <button
+              type="button"
+              onClick={() => {
+                setStoreMode('zapatos_jeans');
+                setProductCategoryFilter('todas');
+                showToast('Modo 2 Activado: Tienda Especializada en Zapatos & Pantalones Jean.');
+              }}
+              className={`text-left p-4 rounded-sm border-2 transition-all flex items-start justify-between gap-4 ${
+                storeMode === 'zapatos_jeans'
+                  ? 'border-neutral-900 bg-[#faf8f5] shadow-sm'
+                  : 'border-neutral-200 bg-white hover:border-neutral-400 opacity-80 hover:opacity-100'
+              }`}
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 bg-[#c5a880] text-black rounded-xs">
+                    Modo 2 • Lanzamiento
+                  </span>
+                  <span className="font-serif text-base font-semibold text-neutral-900">
+                    Exclusivo Zapatos & Pantalones Jean
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-600 leading-relaxed">
+                  Tienda enfocada 100% en la venta de Calzado Artesanal (Botines Chelsea, Sneakers Nappa, Mocasines, Tacón) y Pantalones Jean (Selvedge, Wide-Leg, Slim).
+                </p>
+              </div>
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-1 ${
+                  storeMode === 'zapatos_jeans'
+                    ? 'bg-emerald-600 text-white'
+                    : 'border border-neutral-300 text-transparent'
+                }`}
+              >
+                <Check className="w-3.5 h-3.5" />
+              </div>
+            </button>
           </div>
         </div>
 
