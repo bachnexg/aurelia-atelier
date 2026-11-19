@@ -22,12 +22,16 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'AURELIA ATELIER | Tienda Online de Moda & Alta Costura Minimalista',
-  description: 'Descubre la nueva colección de prendas atemporales confeccionadas en lana virgen, seda pura y algodón orgánico. Elegancia arquitectónica y lujo silencioso.',
-  keywords: ['moda', 'ropa de lujo', 'minimalismo', 'sastrería', 'vestidos de seda', 'abrigos de lana'],
+  title: 'VALISBE | Tienda Online de Jeans, Calzado & Moda de Autor',
+  description: 'Descubre la nueva colección de VALISBE: pantalones jean de corte escultural, línea Plus Size, calzado en piel y prendas atemporales.',
+  keywords: ['Valisbe', 'jeans', 'pantalones jean', 'wide leg', 'levantacola', 'zapatos', 'moda de lujo'],
+  icons: {
+    icon: '/images/logo-monogram.png',
+    apple: '/images/logoPrincipal.jpg',
+  },
   openGraph: {
-    title: 'AURELIA ATELIER | Colección de Moda Minimalista',
-    description: 'Elegancia atemporal y diseño contemporáneo. Envíos express internacionales.',
+    title: 'VALISBE | Colección Oficial de Jeans & Moda',
+    description: 'Cortes que esculpen la silueta y diseño contemporáneo. Envíos express.',
     type: 'website',
   },
 };

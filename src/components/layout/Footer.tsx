@@ -31,6 +31,16 @@ export function Footer() {
         <div className="border-b border-neutral-800 pb-16 mb-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-6 space-y-3">
+              <div className="flex items-center gap-3 mb-2">
+                <img
+                  src="/images/logo-valisbe-light.png"
+                  alt={siteSettings.brandName || 'VALISBE'}
+                  className="h-12 w-auto object-contain"
+                />
+                <span className="font-serif text-xl tracking-[0.25em] text-white uppercase">
+                  {siteSettings.brandName || 'VALISBE'}
+                </span>
+              </div>
               <span className="text-[11px] uppercase tracking-[0.3em] text-[#c5a880] font-semibold block">
                 {siteSettings.newsletterBadge}
               </span>

@@ -46,7 +46,7 @@ export default function RegisterPage() {
         
         <div className="text-center space-y-2">
           <span className="text-[11px] uppercase tracking-[0.3em] text-[#c5a880] font-semibold block">
-            Maison Aurelia
+            Maison VALISBE
           </span>
           <h1 className="font-serif text-3xl text-neutral-900 font-normal">
             Crear Cuenta
@@ -123,7 +123,7 @@ export default function RegisterPage() {
                 className="mt-0.5 w-4 h-4 accent-neutral-900 rounded"
               />
               <span>
-                Acepto los Términos de Servicio y la Política de Privacidad de Aurelia Atelier.
+                Acepto los Términos de Servicio y la Política de Privacidad de VALISBE.
               </span>
             </label>
           </div>

@@ -163,24 +163,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   // Load state from localStorage AND sync with Global Server State (/api/store/state)
   useEffect(() => {
     try {
-      const savedProducts = localStorage.getItem('aurelia_products_v3');
+      const savedProducts = localStorage.getItem('aurelia_products_v4');
       if (savedProducts) setFullProducts(JSON.parse(savedProducts));
 
-      const savedCategories = localStorage.getItem('aurelia_categories_v3');
+      const savedCategories = localStorage.getItem('aurelia_categories_v4');
       if (savedCategories) setFullCategories(JSON.parse(savedCategories));
 
-      const savedSettings = localStorage.getItem('aurelia_site_settings_v3');
+      const savedSettings = localStorage.getItem('aurelia_site_settings_v4');
       if (savedSettings) {
         setFullSettings({ ...INITIAL_SITE_SETTINGS, ...JSON.parse(savedSettings) });
       }
 
-      const savedSjProducts = localStorage.getItem('aurelia_sj_products_v3');
+      const savedSjProducts = localStorage.getItem('aurelia_sj_products_v4');
       if (savedSjProducts) setSjProducts(JSON.parse(savedSjProducts));
 
-      const savedSjCategories = localStorage.getItem('aurelia_sj_categories_v3');
+      const savedSjCategories = localStorage.getItem('aurelia_sj_categories_v4');
       if (savedSjCategories) setSjCategories(JSON.parse(savedSjCategories));
 
-      const savedSjSettings = localStorage.getItem('aurelia_sj_site_settings_v3');
+      const savedSjSettings = localStorage.getItem('aurelia_sj_site_settings_v4');
       if (savedSjSettings) {
         setSjSettings({ ...SHOES_JEANS_SITE_SETTINGS, ...JSON.parse(savedSjSettings) });
       }
@@ -267,32 +267,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
-    localStorage.setItem('aurelia_products_v3', JSON.stringify(fullProducts));
+    localStorage.setItem('aurelia_products_v4', JSON.stringify(fullProducts));
   }, [fullProducts, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    localStorage.setItem('aurelia_categories_v3', JSON.stringify(fullCategories));
+    localStorage.setItem('aurelia_categories_v4', JSON.stringify(fullCategories));
   }, [fullCategories, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    localStorage.setItem('aurelia_site_settings_v3', JSON.stringify(fullSettings));
+    localStorage.setItem('aurelia_site_settings_v4', JSON.stringify(fullSettings));
   }, [fullSettings, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    localStorage.setItem('aurelia_sj_products_v3', JSON.stringify(sjProducts));
+    localStorage.setItem('aurelia_sj_products_v4', JSON.stringify(sjProducts));
   }, [sjProducts, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    localStorage.setItem('aurelia_sj_categories_v3', JSON.stringify(sjCategories));
+    localStorage.setItem('aurelia_sj_categories_v4', JSON.stringify(sjCategories));
   }, [sjCategories, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    localStorage.setItem('aurelia_sj_site_settings_v3', JSON.stringify(sjSettings));
+    localStorage.setItem('aurelia_sj_site_settings_v4', JSON.stringify(sjSettings));
   }, [sjSettings, isHydrated]);
 
   useEffect(() => {
@@ -497,12 +497,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCoupons(INITIAL_COUPONS);
     setOrders(SAMPLE_ORDERS);
 
-    localStorage.setItem('aurelia_products_v3', JSON.stringify(INITIAL_PRODUCTS));
-    localStorage.setItem('aurelia_categories_v3', JSON.stringify(CATEGORIES_METADATA));
-    localStorage.setItem('aurelia_site_settings_v3', JSON.stringify(INITIAL_SITE_SETTINGS));
-    localStorage.setItem('aurelia_sj_products_v3', JSON.stringify(SHOES_JEANS_PRODUCTS));
-    localStorage.setItem('aurelia_sj_categories_v3', JSON.stringify(SHOES_JEANS_CATEGORIES));
-    localStorage.setItem('aurelia_sj_site_settings_v3', JSON.stringify(SHOES_JEANS_SITE_SETTINGS));
+    localStorage.setItem('aurelia_products_v4', JSON.stringify(INITIAL_PRODUCTS));
+    localStorage.setItem('aurelia_categories_v4', JSON.stringify(CATEGORIES_METADATA));
+    localStorage.setItem('aurelia_site_settings_v4', JSON.stringify(INITIAL_SITE_SETTINGS));
+    localStorage.setItem('aurelia_sj_products_v4', JSON.stringify(SHOES_JEANS_PRODUCTS));
+    localStorage.setItem('aurelia_sj_categories_v4', JSON.stringify(SHOES_JEANS_CATEGORIES));
+    localStorage.setItem('aurelia_sj_site_settings_v4', JSON.stringify(SHOES_JEANS_SITE_SETTINGS));
     localStorage.setItem('aurelia_coupons_list', JSON.stringify(INITIAL_COUPONS));
     localStorage.setItem('aurelia_orders', JSON.stringify(SAMPLE_ORDERS));
   };

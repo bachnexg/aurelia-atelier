@@ -454,7 +454,7 @@ export default function AdminPage() {
       id: `test-${Date.now()}`,
       name: newTestName.trim(),
       role: newTestRole.trim() || 'Cliente Verificado',
-      product: newTestProduct.trim() || 'Colección Aurelia',
+      product: newTestProduct.trim() || 'Colección VALISBE',
       comment: newTestComment.trim(),
       rating: 5,
     };

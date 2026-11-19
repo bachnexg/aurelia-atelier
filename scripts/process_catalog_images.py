@@ -387,16 +387,16 @@ def create_studio_canvas(w=CANVAS_W, h=CANVAS_H, with_floor_shadow=True):
     return Image.fromarray(arr)
 
 
-def draw_editorial_frame(canvas_pil, subtitle_tag="DENIM ATELIER COLLECTION"):
+def draw_editorial_frame(canvas_pil, subtitle_tag="DENIM COLLECTION"):
     draw = ImageDraw.Draw(canvas_pil)
     w, h = canvas_pil.size
     border_color = (218, 208, 192)
     draw.rectangle([28, 28, w - 29, h - 29], outline=border_color, width=1)
 
-    header_text = f"A U R E L I A   A T E L I E R   ·   {subtitle_tag}"
+    header_text = f"V A L I S B E   ·   {subtitle_tag}"
     bbox = draw.textbbox((0, 0), header_text, font=FONTS["brand_top"])
     tw = bbox[2] - bbox[0]
-    draw.text(((w - tw) // 2, 46), header_text, fill=(140, 128, 112), font=FONTS["brand_top"])
+    draw.text(((w - tw) // 2, 46), header_text, fill=(102, 18, 31), font=FONTS["brand_top"])
 
 
 def paste_subject_on_studio(canvas_pil, subj_bgr, target_box):

@@ -513,7 +513,7 @@ export default function CheckoutPage() {
                     <p className="font-semibold text-neutral-900">Instrucciones de Transferencia Bancaria:</p>
                     <p>Banco: Santander / BBVA Private Banking</p>
                     <p>IBAN: ES76 0049 1500 0512 3456 7890</p>
-                    <p>Beneficiario: AURELIA ATELIER S.L.</p>
+                    <p>Beneficiario: VALISBE S.L.</p>
                     <p className="text-[11px] text-neutral-500 pt-1">
                       Tu pedido se procesará y reservará inmediatamente al completar el checkout.
                     </p>
@@ -603,7 +603,7 @@ export default function CheckoutPage() {
                 </button>
 
                 <p className="text-[11px] text-neutral-400 text-center leading-relaxed">
-                  Al hacer clic en &ldquo;Confirmar y Pagar&rdquo;, aceptas los Términos de Servicio y la Política de Devoluciones de 30 días de Aurelia Atelier.
+                  Al hacer clic en &ldquo;Confirmar y Pagar&rdquo;, aceptas los Términos de Servicio y la Política de Devoluciones de 30 días de VALISBE.
                 </p>
               </div>
             </div>

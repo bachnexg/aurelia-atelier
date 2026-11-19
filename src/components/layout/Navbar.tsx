@@ -165,13 +165,20 @@ export function Navbar() {
 
             {/* Brand Logo (Center) */}
             <div className="flex-1 lg:flex-none text-center">
-              <Link href="/" className="inline-block group text-center">
-                <span className="block font-serif text-2xl sm:text-3xl tracking-[0.28em] text-neutral-900 group-hover:text-neutral-700 transition-colors uppercase font-normal">
-                  {siteSettings.brandName || 'AURELIA'}
-                </span>
-                <span className="block text-[9px] tracking-[0.45em] text-neutral-500 uppercase -mt-1 font-sans">
-                  {siteSettings.brandSubtitle || 'A T E L I E R'}
-                </span>
+              <Link href="/" className="inline-flex items-center justify-center gap-2.5 group">
+                <img
+                  src="/images/logo-valisbe.png"
+                  alt={siteSettings.brandName || 'VALISBE'}
+                  className="h-12 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="text-left hidden sm:block border-l border-neutral-200 pl-2.5">
+                  <span className="block font-serif text-lg tracking-[0.25em] text-[#66121f] group-hover:text-black transition-colors uppercase font-semibold leading-tight">
+                    {siteSettings.brandName || 'VALISBE'}
+                  </span>
+                  <span className="block text-[8px] tracking-[0.38em] text-neutral-500 uppercase font-sans">
+                    {siteSettings.brandSubtitle || 'D E N I M  &  S H O E S'}
+                  </span>
+                </div>
               </Link>
             </div>
 

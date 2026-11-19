@@ -49,6 +49,11 @@ function LoginFormContent() {
     <div className="bg-[#faf8f5] min-h-[80vh] flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-white p-8 sm:p-10 rounded-sm border border-neutral-200 shadow-xl space-y-8">
         <div className="text-center space-y-2">
+          <img
+            src="/images/logo-valisbe.png"
+            alt="VALISBE"
+            className="h-14 w-auto mx-auto mb-2 object-contain"
+          />
           <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.3em] text-[#c5a880] font-semibold">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Acceso Cifrado & Protegido</span>
@@ -57,7 +62,7 @@ function LoginFormContent() {
             Iniciar Sesión
           </h1>
           <p className="text-xs text-neutral-500">
-            Ingresa tus credenciales de Aurelia Atelier para acceder a tu cuenta o consola administrativa.
+            Ingresa tus credenciales de VALISBE para acceder a tu cuenta o consola administrativa.
           </p>
         </div>
 

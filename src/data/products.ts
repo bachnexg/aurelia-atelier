@@ -1102,7 +1102,7 @@ export const CATEGORIES_METADATA: CategoryItem[] = [
 ];
 
 export const INITIAL_SITE_SETTINGS: SiteSettings = {
-  brandName: 'AURELIA',
+  brandName: 'VALISBE',
   brandSubtitle: 'A T E L I E R',
   announcementText: 'Envíos express internacionales gratuitos en compras superiores a $100',
   announcementPromo: 'Código: AURELIA15 (-15%)',
@@ -1120,7 +1120,7 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
 
   lookbookBadge: 'Edición Limitada',
   lookbookTitle: 'Denim Escultural & Sastrería de Autor.',
-  lookbookDescription: 'Cada prenda de Aurelia Atelier se diseña en nuestros estudios y se confecciona en pequeños lotes numerados para garantizar una confección sin compromisos.',
+  lookbookDescription: 'Cada prenda de VALISBE se diseña en nuestros estudios y se confecciona en pequeños lotes numerados para garantizar una confección sin compromisos.',
   lookbookImage: '/images/catalogo/jean-01-tonos.jpg',
   lookbookCouponCode: 'AURELIA15',
   lookbookCtaText: 'Descubrir Piezas Seleccionadas',
@@ -1131,7 +1131,7 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
   expressShippingExtra: 0,
 
   newsletterBadge: 'Únete a la Maison',
-  newsletterTitle: 'Suscríbete al Club Aurelia Atelier',
+  newsletterTitle: 'Suscríbete al Club VALISBE',
   newsletterDescription: 'Recibe acceso anticipado a nuevas colecciones cápsula, ventas privadas exclusivas y un 10% de descuento en tu primera compra con el código BIENVENIDA10.',
   showroom1Title: 'París Flagship:',
   showroom1Address: 'Rue Saint-Honoré 248, 75001 París',
@@ -1374,23 +1374,23 @@ export const SHOES_JEANS_PRODUCTS: Product[] = [
 ];
 
 export const SHOES_JEANS_SITE_SETTINGS: SiteSettings = {
-  brandName: 'AURELIA',
+  brandName: 'VALISBE',
   brandSubtitle: 'D E N I M  &  S H O E S',
-  announcementText: 'Nueva Colección Denim (18 Modelos Exclusivos Tallas 6 a 24) & Calzado en Piel • Envío Gratis desde $100',
+  announcementText: 'VALISBE • Nueva Colección Denim (18 Modelos Exclusivos Tallas 6 a 24) & Calzado en Piel • Envío Gratis desde $100',
   announcementPromo: 'Código: AURELIA15 (-15%)',
   announcementEnabled: true,
 
-  heroBadge: 'Colección Oficial • 18 Modelos Denim & Calzado',
+  heroBadge: 'VALISBE • Colección Oficial Denim & Calzado',
   heroTitleLine1: 'Sculpted Denim',
   heroTitleItalic: '& Fine Leather',
-  heroSubtitle: 'Descubre nuestra nueva colección de Pantalones Jean: Wide Leg, Campana Levantacola, Cortes Sartoriales y Línea Plus Size (Tallas 6 a 24), junto a calzado artesanal en piel italiana.',
+  heroSubtitle: 'Descubre la nueva colección de VALISBE: Pantalones Jean Wide Leg, Campana Levantacola, Cortes Sartoriales y Línea Plus Size (Tallas 6 a 24), junto a calzado artesanal en piel.',
   heroImage: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=2000&auto=format&fit=crop',
   heroPrimaryCtaText: 'Ver Colección Jeans',
   heroPrimaryCtaHref: '/shop?category=jeans',
   heroSecondaryCtaText: 'Explorar Calzado',
   heroSecondaryCtaHref: '/shop?category=zapatos',
 
-  lookbookBadge: 'Lookbook Denim Atelier',
+  lookbookBadge: 'Lookbook VALISBE Denim',
   lookbookTitle: 'Cortes que Esculpen la Silueta. Tallas 6 a 24.',
   lookbookDescription: 'Desde el Wide Leg con Bolsillos de Parche y el Campana Levantacola (+4 cm) hasta nuestra Línea Plus Size en tonos tierra, perla y borgoña. Cada jean ha sido fotografiado y curado en múltiples lavados.',
   lookbookImage: '/images/catalogo/jean-01-tonos.jpg',
@@ -1402,8 +1402,8 @@ export const SHOES_JEANS_SITE_SETTINGS: SiteSettings = {
   standardShippingCost: 15,
   expressShippingExtra: 0,
 
-  newsletterBadge: 'Club Denim & Calzado',
-  newsletterTitle: 'Únete al Lanzamiento de Aurelia',
+  newsletterBadge: 'Club VALISBE',
+  newsletterTitle: 'Únete a la Comunidad VALISBE',
   newsletterDescription: 'Recibe acceso prioritario a nuevos drops de pantalones jean, línea Plus Size y calzado en piel con un 10% de descuento usando BIENVENIDA10.',
   showroom1Title: 'París Flagship:',
   showroom1Address: 'Rue Saint-Honoré 248, 75001 París',
