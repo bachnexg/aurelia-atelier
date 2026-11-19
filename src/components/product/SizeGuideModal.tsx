@@ -28,12 +28,16 @@ export function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps) {
   ];
 
   const jeanSizes = [
-    { size: '26', eu: '34 EU', waist: { cm: '66-69', in: '26-27' }, hips: { cm: '90-93', in: '35.5-36.5' } },
-    { size: '28', eu: '36-38 EU', waist: { cm: '71-74', in: '28-29' }, hips: { cm: '94-97', in: '37-38' } },
-    { size: '30', eu: '38-40 EU', waist: { cm: '76-79', in: '30-31' }, hips: { cm: '98-101', in: '38.5-40' } },
-    { size: '32', eu: '42 EU', waist: { cm: '81-84', in: '32-33' }, hips: { cm: '102-105', in: '40-41.5' } },
-    { size: '34', eu: '44 EU', waist: { cm: '86-90', in: '34-35' }, hips: { cm: '106-110', in: '42-43.5' } },
-    { size: '36', eu: '46 EU', waist: { cm: '91-96', in: '36-38' }, hips: { cm: '111-115', in: '44-45.5' } },
+    { size: '6', eu: '34 EU / XS', waist: { cm: '62-65', in: '24.5-25.5' }, hips: { cm: '88-91', in: '34.5-36' } },
+    { size: '8', eu: '36 EU / S', waist: { cm: '66-69', in: '26-27' }, hips: { cm: '92-95', in: '36-37.5' } },
+    { size: '10', eu: '38 EU / M', waist: { cm: '70-73', in: '27.5-28.5' }, hips: { cm: '96-99', in: '38-39' } },
+    { size: '12', eu: '40 EU / M-L', waist: { cm: '74-77', in: '29-30.5' }, hips: { cm: '100-103', in: '39.5-40.5' } },
+    { size: '14', eu: '42 EU / L', waist: { cm: '78-82', in: '30.5-32' }, hips: { cm: '104-108', in: '41-42.5' } },
+    { size: '16', eu: '44 EU / XL', waist: { cm: '83-87', in: '32.5-34' }, hips: { cm: '109-113', in: '43-44.5' } },
+    { size: '18 (Plus)', eu: '46 EU / 1X', waist: { cm: '88-93', in: '34.5-36.5' }, hips: { cm: '114-119', in: '45-47' } },
+    { size: '20 (Plus)', eu: '48 EU / 2X', waist: { cm: '94-99', in: '37-39' }, hips: { cm: '120-125', in: '47-49' } },
+    { size: '22 (Plus)', eu: '50 EU / 3X', waist: { cm: '100-105', in: '39.5-41.5' }, hips: { cm: '126-131', in: '49.5-51.5' } },
+    { size: '24 (Plus)', eu: '52 EU / 4X', waist: { cm: '106-112', in: '41.5-44' }, hips: { cm: '132-138', in: '52-54.5' } },
   ];
 
   const apparelSizes = {
