@@ -1239,12 +1239,61 @@ export default function AdminPage() {
                       </td>
 
                       <td className="py-3 px-4">
-                        <span className="font-semibold text-neutral-900">${p.price}</span>
-                        {p.originalPrice && (
-                          <span className="text-[11px] text-neutral-400 line-through ml-1.5">
-                            ${p.originalPrice}
-                          </span>
-                        )}
+                        <div className="flex flex-col gap-1.5 min-w-[125px]">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] font-bold text-neutral-500">$</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              defaultValue={p.price}
+                              key={`price-${p.id}-${p.price}`}
+                              onBlur={(e) => {
+                                const val = Number(e.target.value);
+                                if (!Number.isNaN(val) && val > 0 && val !== p.price) {
+                                  updateProduct(p.id, { price: val });
+                                  showToast(`Precio de "${p.name}" actualizado a $${val}`);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  (e.target as HTMLInputElement).blur();
+                                }
+                              }}
+                              className="w-20 px-2 py-1 text-xs font-semibold text-neutral-900 bg-white border border-neutral-300 rounded-xs focus:border-black focus:outline-none"
+                              title="Edita el precio y presiona Enter o haz clic fuera para guardar"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-neutral-400">Antes $</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              placeholder="—"
+                              defaultValue={p.originalPrice || ''}
+                              key={`orig-${p.id}-${p.originalPrice || 0}`}
+                              onBlur={(e) => {
+                                const raw = e.target.value.trim();
+                                const val = raw ? Number(raw) : undefined;
+                                if (val !== p.originalPrice) {
+                                  updateProduct(p.id, {
+                                    originalPrice: val && val > 0 ? val : undefined,
+                                    isSale: Boolean(val && val > p.price),
+                                  });
+                                  showToast(`Precio anterior de "${p.name}" actualizado.`);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  (e.target as HTMLInputElement).blur();
+                                }
+                              }}
+                              className="w-16 px-1.5 py-0.5 text-[11px] text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-xs focus:bg-white focus:border-black focus:outline-none"
+                              title="Precio original tachado (opcional)"
+                            />
+                          </div>
+                        </div>
                       </td>
 
                       <td className="py-3 px-4">
@@ -2188,154 +2237,153 @@ export default function AdminPage() {
             MODAL: CREATE / EDIT CATEGORY
            ========================================================= */}
         {isCategoryModalOpen && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6">
             <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              className="fixed inset-0 bg-black/65 backdrop-blur-xs"
               onClick={() => setIsCategoryModalOpen(false)}
             />
-            <div className="min-h-screen flex items-center justify-center p-4">
-              <div className="relative w-full max-w-xl bg-white shadow-2xl rounded-sm border border-neutral-200 p-6 sm:p-8 space-y-5 text-xs">
-                <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
-                  <h3 className="font-serif text-lg uppercase tracking-wider text-neutral-900 font-semibold">
-                    {editingCategoryId ? 'Editar Categoría' : 'Crear Nueva Categoría'}
-                  </h3>
-                  <button
-                    onClick={() => setIsCategoryModalOpen(false)}
-                    className="text-neutral-400 hover:text-black"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+            <div className="relative z-10 w-full max-w-xl max-h-[88vh] bg-white shadow-2xl rounded-sm border border-neutral-200 flex flex-col overflow-hidden text-xs">
+              <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-white">
+                <h3 className="font-serif text-lg uppercase tracking-wider text-neutral-900 font-semibold">
+                  {editingCategoryId ? 'Editar Categoría' : 'Crear Nueva Categoría'}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(false)}
+                  className="p-1 text-neutral-400 hover:text-black"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-                <form onSubmit={handleSaveCategory} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Nombre de la Categoría *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={catName}
-                        onChange={(e) => {
-                          setCatName(e.target.value);
-                          if (!editingCategoryId) setCatSlug(slugify(e.target.value));
-                        }}
-                        placeholder="Ej: Calzado Artesanal"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs focus:bg-white focus:outline-none focus:border-black"
-                      />
-                    </div>
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Slug (Identificador URL) *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={catSlug}
-                        onChange={(e) => setCatSlug(slugify(e.target.value))}
-                        placeholder="ej: calzado"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs font-mono focus:bg-white focus:outline-none focus:border-black"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Subtítulo / Badge Editorial
-                      </label>
-                      <input
-                        type="text"
-                        value={catBadge}
-                        onChange={(e) => setCatBadge(e.target.value)}
-                        placeholder="Ej: Edición Limitada"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Tipo de Filtro
-                      </label>
-                      <select
-                        value={catFilterType}
-                        onChange={(e) =>
-                          setCatFilterType(e.target.value as 'category' | 'gender')
-                        }
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      >
-                        <option value="category">Categoría de Prenda (ej: chaquetas, calzado)</option>
-                        <option value="gender">Línea de Género (mujer, hombre, unisex)</option>
-                      </select>
-                    </div>
-                  </div>
-
+              <form onSubmit={handleSaveCategory} className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                      Descripción de la Colección *
+                      Nombre de la Categoría *
                     </label>
-                    <textarea
-                      rows={2}
+                    <input
+                      type="text"
                       required
-                      value={catDescription}
-                      onChange={(e) => setCatDescription(e.target.value)}
-                      placeholder="Describe los tejidos y estilo de esta categoría..."
+                      value={catName}
+                      onChange={(e) => {
+                        setCatName(e.target.value);
+                        if (!editingCategoryId) setCatSlug(slugify(e.target.value));
+                      }}
+                      placeholder="Ej: Calzado Artesanal"
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs focus:bg-white focus:outline-none focus:border-black"
+                    />
+                  </div>
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Slug (Identificador URL) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={catSlug}
+                      onChange={(e) => setCatSlug(slugify(e.target.value))}
+                      placeholder="ej: calzado"
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs font-mono focus:bg-white focus:outline-none focus:border-black"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Subtítulo / Badge Editorial
+                    </label>
+                    <input
+                      type="text"
+                      value={catBadge}
+                      onChange={(e) => setCatBadge(e.target.value)}
+                      placeholder="Ej: Edición Limitada"
                       className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
                     />
                   </div>
-
                   <div>
                     <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                      URL de Imagen de Portada *
+                      Tipo de Filtro
                     </label>
+                    <select
+                      value={catFilterType}
+                      onChange={(e) =>
+                        setCatFilterType(e.target.value as 'category' | 'gender')
+                      }
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                    >
+                      <option value="category">Categoría de Prenda (ej: chaquetas, calzado)</option>
+                      <option value="gender">Línea de Género (mujer, hombre, unisex)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                    Descripción de la Colección *
+                  </label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={catDescription}
+                    onChange={(e) => setCatDescription(e.target.value)}
+                    placeholder="Describe los tejidos y estilo de esta categoría..."
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                    URL o Ruta de Imagen de Portada *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={catImage}
+                    onChange={(e) => setCatImage(e.target.value)}
+                    placeholder="/images/catalogo/jean-01-editorial.jpg o https://..."
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs font-mono text-[11px]"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-6 pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
-                      type="url"
-                      required
-                      value={catImage}
-                      onChange={(e) => setCatImage(e.target.value)}
-                      placeholder="https://images.unsplash.com/..."
-                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs font-mono text-[11px]"
+                      type="checkbox"
+                      checked={catShowInNavbar}
+                      onChange={(e) => setCatShowInNavbar(e.target.checked)}
+                      className="w-4 h-4 accent-neutral-900 rounded"
                     />
-                  </div>
+                    <span>Mostrar enlace directo en la Barra de Navegación</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={catShowInHome}
+                      onChange={(e) => setCatShowInHome(e.target.checked)}
+                      className="w-4 h-4 accent-neutral-900 rounded"
+                    />
+                    <span>Destacar como tarjeta visual en la Portada (Home)</span>
+                  </label>
+                </div>
 
-                  <div className="flex flex-wrap items-center gap-6 pt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={catShowInNavbar}
-                        onChange={(e) => setCatShowInNavbar(e.target.checked)}
-                        className="w-4 h-4 accent-neutral-900 rounded"
-                      />
-                      <span>Mostrar enlace directo en la Barra de Navegación</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={catShowInHome}
-                        onChange={(e) => setCatShowInHome(e.target.checked)}
-                        className="w-4 h-4 accent-neutral-900 rounded"
-                      />
-                      <span>Destacar como tarjeta visual en la Portada (Home)</span>
-                    </label>
-                  </div>
-
-                  <div className="pt-4 border-t border-neutral-100 flex justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setIsCategoryModalOpen(false)}
-                      className="px-4 py-2.5 border border-neutral-300 text-neutral-700 hover:border-black uppercase tracking-wider font-semibold rounded-xs"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-2.5 bg-neutral-900 hover:bg-black text-white uppercase tracking-wider font-semibold rounded-xs shadow-md"
-                    >
-                      {editingCategoryId ? 'Guardar Categoría' : 'Crear Categoría'}
-                    </button>
-                  </div>
-                </form>
-              </div>
+                <div className="pt-4 border-t border-neutral-100 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryModalOpen(false)}
+                    className="px-4 py-2.5 border border-neutral-300 text-neutral-700 hover:border-black uppercase tracking-wider font-semibold rounded-xs"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 bg-neutral-900 hover:bg-black text-white uppercase tracking-wider font-semibold rounded-xs shadow-md"
+                  >
+                    {editingCategoryId ? 'Guardar Categoría' : 'Crear Categoría'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -2344,385 +2392,414 @@ export default function AdminPage() {
             MODAL: CREATE / EDIT PRODUCT (Full Multi-Image, Multi-Color, Details)
            ========================================================= */}
         {isProductModalOpen && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6">
             <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              className="fixed inset-0 bg-black/65 backdrop-blur-xs"
               onClick={() => setIsProductModalOpen(false)}
             />
 
-            <div className="min-h-screen flex items-center justify-center p-4">
-              <div className="relative w-full max-w-3xl bg-white shadow-2xl rounded-sm border border-neutral-200 p-6 sm:p-8 space-y-6 my-8">
-                <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
+            <div className="relative z-10 w-full max-w-3xl max-h-[88vh] bg-white shadow-2xl rounded-sm border border-neutral-200 flex flex-col overflow-hidden">
+              {/* Fixed Modal Header (Never overlapped by Navbar) */}
+              <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-200 bg-white">
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#c5a880] font-semibold block">
+                    Editor de Catálogo • {siteSettings.brandName}
+                  </span>
                   <h3 className="font-serif text-lg uppercase tracking-wider text-neutral-900 font-semibold">
-                    {editingProductId ? 'Editar Prenda Completa' : 'Publicar Nueva Prenda'}
+                    {editingProductId ? 'Editar Prenda y Precios' : 'Publicar Nueva Prenda'}
                   </h3>
-                  <button
-                    onClick={() => setIsProductModalOpen(false)}
-                    className="text-neutral-400 hover:text-black"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setIsProductModalOpen(false)}
+                  className="p-1.5 text-neutral-500 hover:text-black bg-neutral-100 hover:bg-neutral-200 rounded-full transition-colors"
+                  aria-label="Cerrar panel"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-                <form onSubmit={handleSaveProduct} className="space-y-5 text-xs">
-                  {/* Row 1: Name, SKU, Slug */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Nombre de la Prenda *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formName}
-                        onChange={(e) => {
-                          setFormName(e.target.value);
-                          if (!editingProductId) setFormSlug(slugify(e.target.value));
-                        }}
-                        placeholder="Ej: Abrigo Sartorial en Lana Virgen"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs focus:bg-white focus:outline-none focus:border-black"
-                      />
-                    </div>
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Código SKU *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formSku}
-                        onChange={(e) => setFormSku(e.target.value.toUpperCase())}
-                        placeholder="AUR-JKT-001"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Row 2: Subtitle & Category/Gender */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Subtítulo / Tejido *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formSubtitle}
-                        onChange={(e) => setFormSubtitle(e.target.value)}
-                        placeholder="100% Lana Virgen Italiana"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Categoría (Dinámica) *
-                      </label>
-                      <select
-                        value={formCategory}
-                        onChange={(e) => setFormCategory(e.target.value)}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      >
-                        {categories
-                          .filter(
-                            (c) =>
-                              c.filterType !== 'gender' &&
-                              !['mujer', 'hombre', 'unisex'].includes(c.slug)
-                          )
-                          .map((c) => (
-                            <option key={c.id} value={c.slug}>
-                              {c.name} ({c.slug})
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Género *
-                      </label>
-                      <select
-                        value={formGender}
-                        onChange={(e) => setFormGender(e.target.value as Gender)}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      >
-                        <option value="mujer">Mujer</option>
-                        <option value="hombre">Hombre</option>
-                        <option value="unisex">Unisex</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Row 3: Description */}
+              {/* Scrollable Form Content */}
+              <form
+                id="admin-product-form"
+                onSubmit={handleSaveProduct}
+                className="flex-1 overflow-y-auto p-6 space-y-5 text-xs"
+              >
+                {/* Row 0: HIGHLIGHTED PRICE & STOCK BAR AT THE VERY TOP FOR FAST EDITING */}
+                <div className="p-4 bg-[#faf8f5] border-2 border-[#c5a880]/50 rounded-sm grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
-                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                      Descripción Editorial *
+                    <label className="block uppercase tracking-wider text-neutral-900 font-bold mb-1">
+                      Precio Venta ($) *
                     </label>
-                    <textarea
-                      rows={3}
-                      required
-                      value={formDescription}
-                      onChange={(e) => setFormDescription(e.target.value)}
-                      placeholder="Descripción detallada del corte, caída y confección..."
-                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                    />
-                  </div>
-
-                  {/* Row 4: Price, Original Price, Stock, Sizes */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Precio Venta ($) *
-                      </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 font-bold text-neutral-500">
+                        $
+                      </span>
                       <input
                         type="number"
                         required
-                        min="1"
-                        value={formPrice}
-                        onChange={(e) => setFormPrice(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                        min="0"
+                        step="any"
+                        value={formPrice === 0 ? '' : formPrice}
+                        onChange={(e) =>
+                          setFormPrice(e.target.value === '' ? 0 : Number(e.target.value))
+                        }
+                        placeholder="64"
+                        className="w-full pl-6 pr-3 py-2 bg-white border border-neutral-300 rounded-xs font-semibold text-sm text-neutral-900 focus:outline-none focus:border-black"
                       />
                     </div>
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Precio Antes ($)
-                      </label>
+                  </div>
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-700 font-semibold mb-1">
+                      Precio Antes ($)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400">
+                        $
+                      </span>
                       <input
                         type="number"
-                        value={formOriginalPrice || ''}
+                        min="0"
+                        step="any"
+                        value={formOriginalPrice ?? ''}
                         onChange={(e) =>
                           setFormOriginalPrice(
                             e.target.value ? Number(e.target.value) : undefined
                           )
                         }
                         placeholder="Opcional"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Stock (Unidades) *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        value={formStock}
-                        onChange={(e) => setFormStock(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Tallas (separar por coma) *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formSizes}
-                        onChange={(e) => setFormSizes(e.target.value)}
-                        placeholder="XS, S, M, L, XL"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                        className="w-full pl-6 pr-3 py-2 bg-white border border-neutral-200 rounded-xs text-sm"
                       />
                     </div>
                   </div>
-
-                  {/* Row 5: Multiple Images Manager */}
-                  <div className="space-y-2 p-4 bg-[#faf8f5] border border-neutral-200 rounded-xs">
-                    <div className="flex items-center justify-between">
-                      <label className="uppercase tracking-wider text-neutral-800 font-semibold">
-                        Galería de Fotografías ({formImages.length})
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setFormImages([...formImages, ''])}
-                        className="text-[11px] uppercase tracking-wider font-semibold text-neutral-900 underline"
-                      >
-                        + Añadir otra imagen
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {formImages.map((imgUrl, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <input
-                            type="url"
-                            value={imgUrl}
-                            onChange={(e) => {
-                              const next = [...formImages];
-                              next[idx] = e.target.value;
-                              setFormImages(next);
-                            }}
-                            placeholder="https://images.unsplash.com/photo-..."
-                            className="flex-1 px-3 py-1.5 bg-white border border-neutral-200 rounded-xs font-mono text-[11px]"
-                          />
-                          {formImages.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setFormImages(formImages.filter((_, i) => i !== idx))
-                              }
-                              className="p-1.5 text-neutral-400 hover:text-rose-600"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Row 6: Multiple Colors Manager */}
-                  <div className="space-y-2 p-4 bg-[#faf8f5] border border-neutral-200 rounded-xs">
-                    <div className="flex items-center justify-between">
-                      <label className="uppercase tracking-wider text-neutral-800 font-semibold">
-                        Variantes de Color ({formColors.length})
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFormColors([
-                            ...formColors,
-                            { name: 'Marfil Editorial', hex: '#f5f2eb' },
-                          ])
-                        }
-                        className="text-[11px] uppercase tracking-wider font-semibold text-neutral-900 underline"
-                      >
-                        + Añadir otro color
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {formColors.map((col, idx) => (
-                        <div key={idx} className="flex items-center gap-2 bg-white p-2 border border-neutral-200 rounded-xs">
-                          <input
-                            type="color"
-                            value={col.hex}
-                            onChange={(e) => {
-                              const next = [...formColors];
-                              next[idx] = { ...next[idx], hex: e.target.value };
-                              setFormColors(next);
-                            }}
-                            className="w-8 h-7 border border-neutral-200 cursor-pointer shrink-0"
-                          />
-                          <input
-                            type="text"
-                            value={col.name}
-                            onChange={(e) => {
-                              const next = [...formColors];
-                              next[idx] = { ...next[idx], name: e.target.value };
-                              setFormColors(next);
-                            }}
-                            placeholder="Nombre del color"
-                            className="flex-1 px-2 py-1 text-xs border-b border-transparent focus:border-black focus:outline-none"
-                          />
-                          {formColors.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setFormColors(formColors.filter((_, i) => i !== idx))
-                              }
-                              className="text-neutral-400 hover:text-rose-600"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Row 7: Composition, Details & Care */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Composición del Tejido
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={formComposition}
-                        onChange={(e) => setFormComposition(e.target.value)}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Detalles (1 por línea)
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={formDetailsText}
-                        onChange={(e) => setFormDetailsText(e.target.value)}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
-                        Cuidados (1 por línea)
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={formCareText}
-                        onChange={(e) => setFormCareText(e.target.value)}
-                        className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Flags */}
-                  <div className="flex flex-wrap items-center gap-6 pt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formIsNew}
-                        onChange={(e) => setFormIsNew(e.target.checked)}
-                        className="w-4 h-4 accent-neutral-900 rounded"
-                      />
-                      <span>Nuevo Lanzamiento</span>
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-700 font-semibold mb-1">
+                      Stock (Unidades) *
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formIsBestSeller}
-                        onChange={(e) => setFormIsBestSeller(e.target.checked)}
-                        className="w-4 h-4 accent-neutral-900 rounded"
-                      />
-                      <span>Más Vendido (Best Seller en Home)</span>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={formStock}
+                      onChange={(e) => setFormStock(Number(e.target.value))}
+                      className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-xs text-sm font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-700 font-semibold mb-1">
+                      Tallas (por coma) *
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formIsSale}
-                        onChange={(e) => setFormIsSale(e.target.checked)}
-                        className="w-4 h-4 accent-neutral-900 rounded"
-                      />
-                      <span>En Oferta Especial</span>
+                    <input
+                      type="text"
+                      required
+                      value={formSizes}
+                      onChange={(e) => setFormSizes(e.target.value)}
+                      placeholder="8, 10, 12, 14, 16"
+                      className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-xs text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 1: Name, SKU */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Nombre de la Prenda *
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formIsFeatured}
-                        onChange={(e) => setFormIsFeatured(e.target.checked)}
-                        className="w-4 h-4 accent-neutral-900 rounded"
-                      />
-                      <span>Destacado en Catálogo</span>
+                    <input
+                      type="text"
+                      required
+                      value={formName}
+                      onChange={(e) => {
+                        setFormName(e.target.value);
+                        if (!editingProductId) setFormSlug(slugify(e.target.value));
+                      }}
+                      placeholder="Ej: Jean Wide Leg Bolsillo"
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs focus:bg-white focus:outline-none focus:border-black"
+                    />
+                  </div>
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Código SKU *
                     </label>
+                    <input
+                      type="text"
+                      required
+                      value={formSku}
+                      onChange={(e) => setFormSku(e.target.value.toUpperCase())}
+                      placeholder="AUR-JNS-101"
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 2: Subtitle & Category/Gender */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Subtítulo / Tejido *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formSubtitle}
+                      onChange={(e) => setFormSubtitle(e.target.value)}
+                      placeholder="Tiro Alto · Bolsillos de Parche"
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                    />
                   </div>
 
-                  <div className="pt-4 border-t border-neutral-100 flex justify-end gap-3">
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Categoría (Dinámica) *
+                    </label>
+                    <select
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                    >
+                      {categories
+                        .filter(
+                          (c) =>
+                            c.filterType !== 'gender' &&
+                            !['mujer', 'hombre', 'unisex'].includes(c.slug)
+                        )
+                        .map((c) => (
+                          <option key={c.id} value={c.slug}>
+                            {c.name} ({c.slug})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Género *
+                    </label>
+                    <select
+                      value={formGender}
+                      onChange={(e) => setFormGender(e.target.value as Gender)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                    >
+                      <option value="mujer">Mujer</option>
+                      <option value="hombre">Hombre</option>
+                      <option value="unisex">Unisex</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Row 3: Description */}
+                <div>
+                  <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                    Descripción Editorial *
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    placeholder="Descripción detallada del corte, caída y confección..."
+                    className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                  />
+                </div>
+
+                {/* Row 5: Multiple Images Manager (Supports both local /images/... and https://...) */}
+                <div className="space-y-2 p-4 bg-[#faf8f5] border border-neutral-200 rounded-xs">
+                  <div className="flex items-center justify-between">
+                    <label className="uppercase tracking-wider text-neutral-800 font-semibold">
+                      Galería de Fotografías ({formImages.length})
+                    </label>
                     <button
                       type="button"
-                      onClick={() => setIsProductModalOpen(false)}
-                      className="px-4 py-2.5 border border-neutral-300 text-neutral-700 hover:border-black uppercase tracking-wider font-semibold rounded-xs"
+                      onClick={() => setFormImages([...formImages, ''])}
+                      className="text-[11px] uppercase tracking-wider font-semibold text-neutral-900 underline"
                     >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-2.5 bg-neutral-900 hover:bg-black text-white uppercase tracking-wider font-semibold rounded-xs shadow-md"
-                    >
-                      {editingProductId ? 'Guardar Cambios' : 'Publicar Prenda'}
+                      + Añadir otra imagen
                     </button>
                   </div>
-                </form>
+                  <div className="space-y-2">
+                    {formImages.map((imgUrl, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={imgUrl}
+                          onChange={(e) => {
+                            const next = [...formImages];
+                            next[idx] = e.target.value;
+                            setFormImages(next);
+                          }}
+                          placeholder="/images/catalogo/jean-01-editorial.jpg o https://..."
+                          className="flex-1 px-3 py-1.5 bg-white border border-neutral-200 rounded-xs font-mono text-[11px]"
+                        />
+                        {formImages.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormImages(formImages.filter((_, i) => i !== idx))
+                            }
+                            className="p-1.5 text-neutral-400 hover:text-rose-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Row 6: Multiple Colors Manager */}
+                <div className="space-y-2 p-4 bg-[#faf8f5] border border-neutral-200 rounded-xs">
+                  <div className="flex items-center justify-between">
+                    <label className="uppercase tracking-wider text-neutral-800 font-semibold">
+                      Variantes de Color ({formColors.length})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormColors([
+                          ...formColors,
+                          { name: 'Marfil Editorial', hex: '#f5f2eb' },
+                        ])
+                      }
+                      className="text-[11px] uppercase tracking-wider font-semibold text-neutral-900 underline"
+                    >
+                      + Añadir otro color
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {formColors.map((col, idx) => (
+                      <div key={idx} className="flex items-center gap-2 bg-white p-2 border border-neutral-200 rounded-xs">
+                        <input
+                          type="color"
+                          value={col.hex}
+                          onChange={(e) => {
+                            const next = [...formColors];
+                            next[idx] = { ...next[idx], hex: e.target.value };
+                            setFormColors(next);
+                          }}
+                          className="w-8 h-7 border border-neutral-200 cursor-pointer shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={col.name}
+                          onChange={(e) => {
+                            const next = [...formColors];
+                            next[idx] = { ...next[idx], name: e.target.value };
+                            setFormColors(next);
+                          }}
+                          placeholder="Nombre del color"
+                          className="flex-1 px-2 py-1 text-xs border-b border-transparent focus:border-black focus:outline-none"
+                        />
+                        {formColors.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormColors(formColors.filter((_, i) => i !== idx))
+                            }
+                            className="text-neutral-400 hover:text-rose-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Row 7: Composition, Details & Care */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Composición del Tejido
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formComposition}
+                      onChange={(e) => setFormComposition(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Detalles (1 por línea)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formDetailsText}
+                      onChange={(e) => setFormDetailsText(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block uppercase tracking-wider text-neutral-600 font-semibold mb-1">
+                      Cuidados (1 por línea)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formCareText}
+                      onChange={(e) => setFormCareText(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Flags */}
+                <div className="flex flex-wrap items-center gap-6 pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formIsNew}
+                      onChange={(e) => setFormIsNew(e.target.checked)}
+                      className="w-4 h-4 accent-neutral-900 rounded"
+                    />
+                    <span>Nuevo Lanzamiento</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formIsBestSeller}
+                      onChange={(e) => setFormIsBestSeller(e.target.checked)}
+                      className="w-4 h-4 accent-neutral-900 rounded"
+                    />
+                    <span>Más Vendido (Best Seller en Home)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formIsSale}
+                      onChange={(e) => setFormIsSale(e.target.checked)}
+                      className="w-4 h-4 accent-neutral-900 rounded"
+                    />
+                    <span>En Oferta Especial</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formIsFeatured}
+                      onChange={(e) => setFormIsFeatured(e.target.checked)}
+                      className="w-4 h-4 accent-neutral-900 rounded"
+                    />
+                    <span>Destacado en Catálogo</span>
+                  </label>
+                </div>
+              </form>
+
+              {/* Fixed Modal Footer (Always visible without scrolling) */}
+              <div className="shrink-0 px-6 py-4 border-t border-neutral-200 bg-[#faf8f5] flex items-center justify-end gap-3 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setIsProductModalOpen(false)}
+                  className="px-4 py-2.5 bg-white border border-neutral-300 text-neutral-700 hover:border-black uppercase tracking-wider font-semibold rounded-xs transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  form="admin-product-form"
+                  className="px-6 py-2.5 bg-neutral-900 hover:bg-black text-white uppercase tracking-wider font-semibold rounded-xs shadow-md transition-colors"
+                >
+                  {editingProductId ? 'Guardar Cambios y Precio' : 'Publicar Prenda'}
+                </button>
               </div>
             </div>
           </div>

@@ -378,24 +378,64 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const syncStateToServerQuietly = (payload: Record<string, unknown>) => {
+    fetch('/api/store/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        ...payload,
+        deployToProduction: false,
+      }),
+    }).catch(() => {
+      // Ignore background sync network errors
+    });
+  };
+
   // --- PRODUCTS CRUD ---
   const addProduct = (productData: Omit<Product, 'id'>) => {
     const newProduct: Product = {
       ...productData,
       id: `prod-${Date.now()}`,
     };
-    setActiveProducts((prev) => [newProduct, ...prev]);
+    if (storeMode === 'zapatos_jeans') {
+      setSjProducts((prev) => {
+        const next = [newProduct, ...prev];
+        syncStateToServerQuietly({ sjProducts: next });
+        return next;
+      });
+    } else {
+      setFullProducts((prev) => {
+        const next = [newProduct, ...prev];
+        syncStateToServerQuietly({ fullProducts: next });
+        return next;
+      });
+    }
     return newProduct;
   };
 
   const updateProduct = (id: string, updatedFields: Partial<Product>) => {
-    setActiveProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p))
-    );
+    const nextSj = sjProducts.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
+    const nextFull = fullProducts.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
+    setSjProducts(nextSj);
+    setFullProducts(nextFull);
+    syncStateToServerQuietly({ sjProducts: nextSj, fullProducts: nextFull });
   };
 
   const deleteProduct = (id: string) => {
-    setActiveProducts((prev) => prev.filter((p) => p.id !== id));
+    if (storeMode === 'zapatos_jeans') {
+      setSjProducts((prev) => {
+        const next = prev.filter((p) => p.id !== id);
+        syncStateToServerQuietly({ sjProducts: next });
+        return next;
+      });
+    } else {
+      setFullProducts((prev) => {
+        const next = prev.filter((p) => p.id !== id);
+        syncStateToServerQuietly({ fullProducts: next });
+        return next;
+      });
+    }
   };
 
   const duplicateProduct = (id: string) => {
